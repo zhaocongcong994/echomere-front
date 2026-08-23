@@ -1,0 +1,51 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      - DATABASE_URL=file:/data/dev.db
+      - JWT_SECRET=${JWT_SECRET:-__metasight_dev_secret__}
+      - LLM_API_KEY=${LLM_API_KEY:-}
+      - LLM_BASE_URL=${LLM_BASE_URL:-https://api.moonshot.cn/v1}
+      - LLM_MODEL=${LLM_MODEL:-moonshot-v1-8k}
+      - PORT=3001
+    volumes:
+      - metasight-data:/data
+    networks:
+      - metasight-net
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - NEXT_PUBLIC_API_BASE_URL=""
+      - PORT=3000
+    networks:
+      - metasight-net
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - metasight-net
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+
+volumes:
+  metasight-data:
+    external: true
+
+networks:
+  metasight-net:
+    driver: bridge
