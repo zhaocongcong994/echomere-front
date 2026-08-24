@@ -1,6 +1,9 @@
+// 使用 ?? 而非 ||，让生产环境可以显式设置为空字符串，从而使用相对路径。
+// 使用 || 会把空字符串误判为 falsy，回退到 localhost:3001，导致部署后登录请求失败。
 const rawBase =
-  (typeof process !== "undefined" && process.env?.NEXT_PUBLIC_API_BASE_URL) ||
-  "http://localhost:3001";
+  (typeof process !== "undefined"
+    ? process.env?.NEXT_PUBLIC_API_BASE_URL
+    : undefined) ?? "http://localhost:3001";
 const API_BASE = rawBase === "" ? "" : rawBase.replace(/\/$/, "");
 
 export function getApiBase() {
@@ -35,6 +38,8 @@ export async function apiFetch(
     headers["Authorization"] = `Bearer ${token}`;
   }
 
-  const url = `${getApiBase()}${path}`;
+  // 后端 API 统一在 /api 命名空间下；调用处仍可使用旧路径，自动补上前缀。
+  const apiPath = path.startsWith("/api/") ? path : `/api${path}`;
+  const url = `${getApiBase()}${apiPath}`;
   return fetch(url, { ...init, headers });
 }
