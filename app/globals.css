@@ -99,8 +99,8 @@ h1 span { display: block; }
 .echo-orb-stage {
   position: absolute;
   z-index: 5;
-  left: 42.6vw;
-  top: 48.5vh;
+  left: 50%;
+  top: 50%;
   width: 142px;
   height: 142px;
   transform: translate(-50%, -50%);
@@ -262,10 +262,6 @@ h1 span { display: block; }
   h1 { font-size: clamp(40px, 11vw, 58px); gap: 12px; }
   .echo-orb-stage { width: 124px; height: 124px; }
   .surface-note { display: none; }
-}
-
-@media (max-aspect-ratio: 6 / 5) {
-  .echo-orb-stage { left: 28vw; top: 53.5vh; }
 }
 
 @media (max-width: 430px) {
