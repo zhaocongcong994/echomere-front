@@ -171,11 +171,11 @@ h1 span { display: block; }
   z-index: 4;
   display: block;
   font-family: var(--font-serif), serif;
-  font-size: 14px;
-  font-weight: 400;
+  font-size: 16px;
+  font-weight: 500;
   line-height: 1;
-  letter-spacing: .22em;
-  text-indent: .22em;
+  letter-spacing: .12em;
+  text-indent: .12em;
   text-shadow: 0 1px 12px rgba(0,0,0,.84);
   transition: color .45s ease, text-shadow .45s ease, transform .45s ease;
 }
@@ -208,12 +208,20 @@ h1 span { display: block; }
 .echo-orb.is-active .orb-copy {
   transform: scale(.96);
   color: transparent;
-  background: linear-gradient(90deg, #b8f2ee 0%, #73bfe8 22%, #b99af0 43%, #f3a9d5 65%, #edc17a 82%, #b8f2ee 100%);
-  background-size: 240% 100%;
+  background: linear-gradient(105deg,
+    rgba(240,242,242,.62) 0%,
+    rgba(240,242,242,.62) 40%,
+    #9ce9e5 45%,
+    #a98cef 48.5%,
+    #f0a2cf 52%,
+    #edc17a 55.5%,
+    rgba(240,242,242,.62) 60%,
+    rgba(240,242,242,.62) 100%);
+  background-size: 250% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   text-shadow: none;
-  animation: text-spectrum-flow 2.4s linear infinite;
+  animation: text-shimmer-sweep 3.1s linear infinite backwards;
 }
 
 .echo-orb.is-active .flow-one { animation-duration: 1.7s; }
@@ -271,9 +279,9 @@ h1 span { display: block; }
   100% { transform: rotate(336deg) scaleX(1.04) scaleY(.93); }
 }
 
-@keyframes text-spectrum-flow {
-  from { background-position: 100% 50%; }
-  to { background-position: -140% 50%; }
+@keyframes text-shimmer-sweep {
+  from { background-position: 100% 0; }
+  to { background-position: -150% 0; }
 }
 
 @media (max-width: 760px) {
