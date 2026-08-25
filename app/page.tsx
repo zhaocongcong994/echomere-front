@@ -1,14 +1,10 @@
 'use client';
 
-import { useState } from 'react';
 import RippleDistortion from './RippleDistortion';
-import ClickSpark from './ClickSpark';
 
 const Arrow = () => <span aria-hidden="true">↗</span>;
 
 export default function Home() {
-  const [isReflecting, setIsReflecting] = useState(false);
-
   return (
     <main className="hero-shell">
       <RippleDistortion
@@ -45,28 +41,6 @@ export default function Home() {
         </div>
 
       </section>
-
-      <div className="mirror-cta-stage">
-        <ClickSpark
-          sparkColor="#fff"
-          sparkSize={10}
-          sparkRadius={15}
-          sparkCount={8}
-          duration={400}
-          easing="ease-out"
-          extraScale={1.0}
-        >
-          <button
-            className={`mirror-cta${isReflecting ? ' is-active' : ''}`}
-            type="button"
-            aria-pressed={isReflecting}
-            onClick={() => setIsReflecting(true)}
-          >
-            <span>内观</span>
-            <span>回响</span>
-          </button>
-        </ClickSpark>
-      </div>
 
       <div className="surface-note" aria-hidden="true">
         <span>MOVE TO DISTURB THE SURFACE</span>
