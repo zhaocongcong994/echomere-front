@@ -208,7 +208,7 @@ h1 span { display: block; }
 .echo-orb.is-active .orb-copy {
   --shimmer-angle: 15deg;
   --shimmer-track-height: 200px;
-  --shimmer-duration: 3000;
+  --shimmer-duration: 2500;
   --_spread: calc(4ch + 80px);
   --_speed: 200;
   --_fg: oklch(from currentColor l c h / calc(alpha * .2));
@@ -251,7 +251,7 @@ h1 span { display: block; }
   background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: none;
-  animation: text-shimmer-sweep 3.1s linear infinite backwards;
+  animation: text-shimmer-sweep 2.6s linear infinite backwards;
 }
 
 .echo-orb.is-active .flow-one { animation-duration: 1.7s; }
