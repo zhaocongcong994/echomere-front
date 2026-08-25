@@ -73,43 +73,46 @@ export default function WaterOrbCanvas({ hovered, active }) {
       ctx.lineJoin = 'round';
       ctx.lineCap = 'round';
 
-      traceBlob(ctx, cx, cy, base, amplitude, phase);
-      const body = ctx.createRadialGradient(cx - base * .34, cy - base * .38, base * .04, cx, cy, base * 1.12);
-      body.addColorStop(0, `rgba(255,255,255,${.08 + mix * .84})`);
-      body.addColorStop(.22, `rgba(${190 + mix * 52},${220 + mix * 28},${234 + mix * 18},${.08 + mix * .72})`);
-      body.addColorStop(.62, `rgba(${22 + mix * 190},${58 + mix * 170},${78 + mix * 164},${.22 + mix * .57})`);
-      body.addColorStop(.86, `rgba(${112 + mix * 90},${164 + mix * 59},${188 + mix * 48},${.3 + mix * .5})`);
-      body.addColorStop(1, `rgba(229,245,250,${.42 + mix * .48})`);
-      ctx.fillStyle = body;
-      ctx.shadowColor = `rgba(191,229,242,${.14 + mix * .42})`;
-      ctx.shadowBlur = 7 + mix * 12;
+      traceBlob(ctx, cx, cy, base + 3, amplitude * 1.08, phase);
+      const membrane = ctx.createLinearGradient(cx - base, cy - base, cx + base, cy + base);
+      membrane.addColorStop(0, `rgba(239,250,253,${.66 + mix * .3})`);
+      membrane.addColorStop(.24, `rgba(76,128,151,${.38 + mix * .24})`);
+      membrane.addColorStop(.54, `rgba(10,38,56,${.52 - mix * .14})`);
+      membrane.addColorStop(.76, `rgba(118,178,203,${.48 + mix * .34})`);
+      membrane.addColorStop(1, `rgba(249,253,255,${.76 + mix * .22})`);
+      ctx.fillStyle = membrane;
+      ctx.shadowColor = `rgba(191,229,242,${.2 + mix * .48})`;
+      ctx.shadowBlur = 10 + mix * 16;
       ctx.fill();
 
-      const edge = ctx.createLinearGradient(cx - base, cy - base, cx + base, cy + base);
-      edge.addColorStop(0, `rgba(235,249,252,${.5 + mix * .42})`);
-      edge.addColorStop(.3, `rgba(91,144,169,${.28 + mix * .28})`);
-      edge.addColorStop(.58, `rgba(32,80,105,${.3 - mix * .08})`);
-      edge.addColorStop(1, `rgba(245,252,254,${.62 + mix * .36})`);
-      ctx.strokeStyle = edge;
-      ctx.lineWidth = 4.5 + mix * 3;
-      ctx.shadowBlur = 8 + mix * 11;
-      ctx.stroke();
+      traceBlob(ctx, cx, cy, base - 7.5, amplitude * .58, -phase * .94, 1.35);
+      const body = ctx.createRadialGradient(cx - base * .38, cy - base * .42, base * .02, cx, cy, base * 1.02);
+      body.addColorStop(0, `rgba(255,255,255,${.08 + mix * .9})`);
+      body.addColorStop(.21, `rgba(${180 + mix * 69},${215 + mix * 36},${230 + mix * 23},${.08 + mix * .78})`);
+      body.addColorStop(.59, `rgba(${13 + mix * 214},${45 + mix * 194},${64 + mix * 183},${.46 + mix * .43})`);
+      body.addColorStop(.84, `rgba(${42 + mix * 173},${91 + mix * 144},${114 + mix * 128},${.52 + mix * .38})`);
+      body.addColorStop(1, `rgba(205,235,246,${.7 + mix * .25})`);
+      ctx.fillStyle = body;
+      ctx.shadowBlur = 0;
+      ctx.fill();
 
-      traceBlob(ctx, cx, cy, base - 7, amplitude * .62, -phase * 1.13, 1.7);
-      ctx.strokeStyle = `rgba(206,235,245,${.2 + mix * .38})`;
-      ctx.lineWidth = 3 + mix * 2.2;
-      ctx.shadowBlur = 5 + mix * 8;
-      ctx.stroke();
-
-      ctx.setLineDash([18, 31, 7, 24]);
-      ctx.lineDashOffset = -phase * 26;
-      traceBlob(ctx, cx, cy, base - 1.5, amplitude * .84, phase * .9, .8);
-      ctx.strokeStyle = `rgba(255,255,255,${.48 + mix * .42})`;
-      ctx.lineWidth = 3.2 + mix * 2.8;
-      ctx.shadowColor = 'rgba(235,250,255,.82)';
-      ctx.shadowBlur = 8 + mix * 8;
-      ctx.stroke();
-      ctx.setLineDash([]);
+      for (let i = 0; i < 5; i += 1) {
+        const angle = phase * (.38 + i * .035) + i * 1.34;
+        const distance = base * (.68 + (i % 2) * .08);
+        const x = cx + Math.cos(angle) * distance;
+        const y = cy + Math.sin(angle) * distance;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(angle + Math.PI / 2);
+        ctx.scale(1.8 + mix * .55, .65 + (i % 3) * .15);
+        ctx.beginPath();
+        ctx.arc(0, 0, 4.8 + mix * 2.6, 0, TAU);
+        ctx.fillStyle = `rgba(248,253,255,${.22 + mix * .4 + (i === 0 ? .18 : 0)})`;
+        ctx.shadowColor = 'rgba(229,248,253,.76)';
+        ctx.shadowBlur = 5 + mix * 7;
+        ctx.fill();
+        ctx.restore();
+      }
 
       if (mix > .03) {
         ctx.shadowBlur = 5;
