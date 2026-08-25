@@ -6,14 +6,10 @@ import RippleDistortion from './RippleDistortion';
 const Arrow = () => <span aria-hidden="true">↗</span>;
 
 export default function Home() {
-  const [variant, setVariant] = useState<'a' | 'b'>('a');
-
-  const actions = variant === 'a'
-    ? ['照见此刻', '听见回响']
-    : ['进入映照', '循光而行'];
+  const [isReflecting, setIsReflecting] = useState(false);
 
   return (
-    <main className={`hero-shell variant-${variant}`}>
+    <main className="hero-shell">
       <RippleDistortion
         src="/hero-v2.png"
         brushSize={97.5}
@@ -32,14 +28,6 @@ export default function Home() {
           <span>ECHOMERE</span>
           <em>洄映</em>
         </a>
-        <div className="variant-switch" aria-label="首页配色版本">
-          <button className={variant === 'a' ? 'active' : ''} onClick={() => setVariant('a')}>
-            A <span>暮紫 · 古金</span>
-          </button>
-          <button className={variant === 'b' ? 'active' : ''} onClick={() => setVariant('b')}>
-            B <span>暗绯 · 雾蓝</span>
-          </button>
-        </div>
         <a className="enter-link" href="#begin">
           进入洄映 <Arrow />
         </a>
@@ -55,11 +43,16 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="orb-actions" aria-label={`版本 ${variant.toUpperCase()} 入口文案`}>
-          <a className="action-orb orb-one" href="#begin"><span>{actions[0]}</span></a>
-          <a className="action-orb orb-two" href="#begin"><span>{actions[1]}</span></a>
-        </div>
       </section>
+
+      <button
+        className={`mirror-cta${isReflecting ? ' is-active' : ''}`}
+        type="button"
+        aria-pressed={isReflecting}
+        onClick={() => setIsReflecting(true)}
+      >
+        <span>内观回响</span>
+      </button>
 
       <div className="surface-note" aria-hidden="true">
         <span>MOVE TO DISTURB THE SURFACE</span>
