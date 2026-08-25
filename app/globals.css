@@ -209,14 +209,13 @@ h1 span { display: block; }
   transform: scale(.96);
   color: transparent;
   background: linear-gradient(105deg,
-    rgba(240,242,242,.62) 0%,
-    rgba(240,242,242,.62) 40%,
-    #9ce9e5 45%,
-    #a98cef 48.5%,
-    #f0a2cf 52%,
-    #edc17a 55.5%,
-    rgba(240,242,242,.62) 60%,
-    rgba(240,242,242,.62) 100%);
+    rgba(240,242,242,.68) 0%,
+    rgba(240,242,242,.68) 43%,
+    rgba(108,108,110,.5) 47%,
+    rgba(0,0,0,.98) 50%,
+    rgba(108,108,110,.5) 53%,
+    rgba(240,242,242,.68) 57%,
+    rgba(240,242,242,.68) 100%);
   background-size: 250% 100%;
   -webkit-background-clip: text;
   background-clip: text;
