@@ -118,7 +118,7 @@ h1 span { display: block; }
   border: 0;
   border-radius: 50%;
   color: rgba(246,243,239,.9);
-  background: radial-gradient(circle, rgba(22,12,32,.22) 0 46%, rgba(35,18,54,.12) 64%, transparent 74%);
+  background: radial-gradient(circle, rgba(16,23,31,.22) 0 46%, rgba(41,27,55,.1) 64%, transparent 74%);
   cursor: pointer;
   isolation: isolate;
   filter: drop-shadow(0 14px 24px rgba(0,0,0,.36));
@@ -130,9 +130,9 @@ h1 span { display: block; }
   position: absolute;
   inset: 14px;
   z-index: 0;
-  border: 1px solid rgba(201,154,231,.13);
+  border: 1px solid rgba(183,203,220,.14);
   border-radius: 50%;
-  box-shadow: inset 0 0 22px rgba(117,64,158,.08);
+  box-shadow: inset 0 0 22px rgba(86,126,151,.08);
   transition: border-color .45s ease, box-shadow .45s ease;
 }
 
@@ -142,7 +142,9 @@ h1 span { display: block; }
   z-index: -1;
   border-radius: 50%;
   opacity: .62;
-  background: radial-gradient(circle, transparent 50%, rgba(133,73,178,.07) 58%, rgba(211,115,183,.1) 68%, transparent 78%);
+  background: conic-gradient(from 35deg, rgba(83,207,216,.1), rgba(127,104,219,.13), rgba(229,121,185,.12), rgba(222,171,94,.1), rgba(83,207,216,.1));
+  -webkit-mask: radial-gradient(circle, transparent 50%, #000 59%, rgba(0,0,0,.72) 68%, transparent 78%);
+  mask: radial-gradient(circle, transparent 50%, #000 59%, rgba(0,0,0,.72) 68%, transparent 78%);
   filter: blur(8px);
   animation: orb-breathe 5.8s ease-in-out infinite;
   transition: opacity .45s ease, filter .45s ease;
@@ -152,10 +154,10 @@ h1 span { display: block; }
   position: absolute;
   z-index: 1;
   border-radius: 47% 53% 51% 49% / 52% 46% 54% 48%;
-  background: conic-gradient(from 12deg, transparent 0 7%, rgba(215,139,211,.32) 13%, #d38bc8 22%, rgba(126,82,194,.48) 37%, transparent 47%, rgba(164,109,213,.28) 57%, #e49bbb 71%, rgba(112,73,178,.45) 84%, transparent 96%);
+  background: conic-gradient(from 12deg, transparent 0 6%, rgba(84,211,220,.72) 13%, rgba(104,158,239,.7) 24%, rgba(151,113,222,.68) 37%, transparent 47%, rgba(231,126,188,.66) 58%, rgba(225,177,101,.62) 71%, rgba(91,198,207,.7) 84%, transparent 96%);
   -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1px));
   mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 1px));
-  filter: drop-shadow(0 0 4px rgba(181,104,204,.34));
+  filter: drop-shadow(0 0 3px rgba(83,199,213,.28)) drop-shadow(0 0 4px rgba(210,114,187,.22));
   pointer-events: none;
   transition: opacity .45s ease, filter .45s ease;
 }
@@ -188,30 +190,30 @@ h1 span { display: block; }
 
 .echo-orb:hover {
   transform: scale(1.075);
-  background: radial-gradient(circle at 44% 39%, rgba(208,89,204,.26) 0, rgba(119,65,199,.2) 38%, rgba(63,31,111,.14) 57%, transparent 74%);
-  filter: drop-shadow(0 16px 28px rgba(0,0,0,.42)) drop-shadow(0 0 16px rgba(145,82,211,.2));
+  background: radial-gradient(circle at 44% 39%, rgba(85,198,210,.17) 0, rgba(139,85,199,.18) 34%, rgba(213,101,175,.13) 55%, transparent 74%);
+  filter: drop-shadow(0 16px 28px rgba(0,0,0,.42)) drop-shadow(0 0 15px rgba(97,182,207,.16)) drop-shadow(0 0 18px rgba(205,105,183,.12));
 }
 
 .echo-orb:hover .orb-aura { opacity: 1; filter: blur(11px); }
-.echo-orb:hover .flow-one { opacity: 1; animation-duration: 2.8s; filter: drop-shadow(0 0 7px rgba(223,126,224,.72)); }
-.echo-orb:hover .flow-two { opacity: .92; animation-duration: 2.1s; filter: drop-shadow(0 0 9px rgba(116,84,255,.6)); }
-.echo-orb:hover .flow-three { opacity: .78; animation-duration: 3.4s; filter: drop-shadow(0 0 10px rgba(211,106,232,.46)); }
-.echo-orb:hover .orb-copy { transform: scale(.96); color: #fff; text-shadow: 0 0 13px rgba(220,180,239,.38); }
+.echo-orb:hover .flow-one { opacity: 1; animation-duration: 2.8s; filter: drop-shadow(0 0 7px rgba(74,209,221,.68)); }
+.echo-orb:hover .flow-two { opacity: .92; animation-duration: 2.1s; filter: drop-shadow(0 0 9px rgba(221,104,187,.56)); }
+.echo-orb:hover .flow-three { opacity: .78; animation-duration: 3.4s; filter: drop-shadow(0 0 9px rgba(227,176,95,.45)); }
+.echo-orb:hover .orb-copy { transform: scale(.96); color: #fff; text-shadow: 0 0 13px rgba(191,214,226,.36); }
 
 .echo-orb.is-active {
-  background: radial-gradient(circle, rgba(68,34,102,.22) 0 47%, rgba(91,42,126,.12) 62%, transparent 74%);
-  filter: drop-shadow(0 16px 30px rgba(0,0,0,.46)) drop-shadow(0 0 17px rgba(196,117,226,.32));
+  background: radial-gradient(circle, rgba(30,64,73,.18) 0 43%, rgba(86,51,109,.14) 58%, transparent 74%);
+  filter: drop-shadow(0 16px 30px rgba(0,0,0,.46)) drop-shadow(0 0 15px rgba(88,197,213,.25)) drop-shadow(0 0 18px rgba(223,119,185,.22));
 }
 
-.echo-orb.is-active::before { border-color: rgba(238,183,244,.44); box-shadow: inset 0 0 26px rgba(168,86,198,.16), 0 0 15px rgba(222,141,238,.2); }
-.echo-orb.is-active .orb-aura { opacity: 1; background: radial-gradient(circle, transparent 47%, rgba(126,74,196,.12) 58%, rgba(237,153,228,.19) 67%, transparent 78%); }
-.echo-orb.is-active .orb-flow { opacity: 1; background: conic-gradient(from 20deg, transparent 0 5%, #f0c1f1 12%, #bd83ed 26%, transparent 38%, #f4b1df 51%, #8e6ce4 64%, transparent 75%, #f4d4f4 88%, transparent 97%); filter: drop-shadow(0 0 8px rgba(239,178,245,.8)); }
+.echo-orb.is-active::before { border-color: rgba(209,228,226,.42); box-shadow: inset 0 0 26px rgba(83,170,187,.12), 0 0 14px rgba(208,133,194,.16); }
+.echo-orb.is-active .orb-aura { opacity: 1; }
+.echo-orb.is-active .orb-flow { opacity: 1; background: conic-gradient(from 20deg, transparent 0 4%, #b8f2ee 11%, #73bfe8 22%, #b99af0 35%, transparent 43%, #f3a9d5 55%, #edc17a 68%, transparent 77%, #91e5df 88%, transparent 97%); filter: drop-shadow(0 0 7px rgba(111,215,221,.6)) drop-shadow(0 0 8px rgba(233,139,199,.48)); }
 .echo-orb.is-active .flow-one { animation-duration: 3.8s; }
 .echo-orb.is-active .flow-two { animation-duration: 5.2s; }
 .echo-orb.is-active .flow-three { animation-duration: 6.4s; }
-.echo-orb.is-active .orb-copy { color: #fff; text-shadow: 0 0 14px rgba(232,192,244,.5); }
+.echo-orb.is-active .orb-copy { color: #fff; text-shadow: 0 0 14px rgba(206,227,230,.46); }
 
-.echo-orb:focus-visible { outline: 1px solid rgba(240,205,246,.8); outline-offset: 8px; }
+.echo-orb:focus-visible { outline: 1px solid rgba(191,231,232,.78); outline-offset: 8px; }
 
 .surface-note {
   position: absolute;
