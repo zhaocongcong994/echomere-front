@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import RippleDistortion from './RippleDistortion';
+import WaterOrbCanvas from './WaterOrbCanvas';
 
 const Arrow = () => <span aria-hidden="true">↗</span>;
 
 export default function Home() {
   const [orbActive, setOrbActive] = useState(false);
+  const [orbHovered, setOrbHovered] = useState(false);
 
   return (
     <main className="hero-shell">
@@ -53,11 +55,12 @@ export default function Home() {
           aria-label="建立回响"
           aria-pressed={orbActive}
           onClick={() => setOrbActive(true)}
+          onPointerEnter={() => setOrbHovered(true)}
+          onPointerLeave={() => setOrbHovered(false)}
+          onFocus={() => setOrbHovered(true)}
+          onBlur={() => setOrbHovered(false)}
         >
-          <span className="orb-aura" aria-hidden="true" />
-          <span className="orb-flow flow-one" aria-hidden="true" />
-          <span className="orb-flow flow-two" aria-hidden="true" />
-          <span className="orb-flow flow-three" aria-hidden="true" />
+          <WaterOrbCanvas hovered={orbHovered} active={orbActive} />
           <span className="orb-copy">
             <span>建立</span>
             <span>回响</span>
