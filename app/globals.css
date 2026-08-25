@@ -188,30 +188,31 @@ h1 span { display: block; }
   display: block;
 }
 
-.echo-orb:hover {
-  transform: scale(1.075);
-  background: radial-gradient(circle at 44% 39%, rgba(85,198,210,.17) 0, rgba(139,85,199,.18) 34%, rgba(213,101,175,.13) 55%, transparent 74%);
-  filter: drop-shadow(0 16px 28px rgba(0,0,0,.42)) drop-shadow(0 0 15px rgba(97,182,207,.16)) drop-shadow(0 0 18px rgba(205,105,183,.12));
-}
-
-.echo-orb:hover .orb-aura { opacity: 1; filter: blur(11px); }
-.echo-orb:hover .flow-one { opacity: 1; animation-duration: 2.8s; filter: drop-shadow(0 0 7px rgba(74,209,221,.68)); }
-.echo-orb:hover .flow-two { opacity: .92; animation-duration: 2.1s; filter: drop-shadow(0 0 9px rgba(221,104,187,.56)); }
-.echo-orb:hover .flow-three { opacity: .78; animation-duration: 3.4s; filter: drop-shadow(0 0 9px rgba(227,176,95,.45)); }
-.echo-orb:hover .orb-copy { transform: scale(.96); color: #fff; text-shadow: 0 0 13px rgba(191,214,226,.36); }
-
+.echo-orb:hover,
 .echo-orb.is-active {
+  transform: scale(1.075);
   background: radial-gradient(circle, rgba(30,64,73,.18) 0 43%, rgba(86,51,109,.14) 58%, transparent 74%);
   filter: drop-shadow(0 16px 30px rgba(0,0,0,.46)) drop-shadow(0 0 15px rgba(88,197,213,.25)) drop-shadow(0 0 18px rgba(223,119,185,.22));
 }
 
+.echo-orb:hover::before,
 .echo-orb.is-active::before { border-color: rgba(209,228,226,.42); box-shadow: inset 0 0 26px rgba(83,170,187,.12), 0 0 14px rgba(208,133,194,.16); }
-.echo-orb.is-active .orb-aura { opacity: 1; }
+
+.echo-orb:hover .orb-aura,
+.echo-orb.is-active .orb-aura { opacity: 1; filter: blur(11px); }
+
+.echo-orb:hover .orb-flow,
 .echo-orb.is-active .orb-flow { opacity: 1; background: conic-gradient(from 20deg, transparent 0 4%, #b8f2ee 11%, #73bfe8 22%, #b99af0 35%, transparent 43%, #f3a9d5 55%, #edc17a 68%, transparent 77%, #91e5df 88%, transparent 97%); filter: drop-shadow(0 0 7px rgba(111,215,221,.6)) drop-shadow(0 0 8px rgba(233,139,199,.48)); }
-.echo-orb.is-active .flow-one { animation-duration: 3.8s; }
-.echo-orb.is-active .flow-two { animation-duration: 5.2s; }
-.echo-orb.is-active .flow-three { animation-duration: 6.4s; }
-.echo-orb.is-active .orb-copy { color: #fff; text-shadow: 0 0 14px rgba(206,227,230,.46); }
+
+.echo-orb:hover .flow-one { animation-duration: 2.8s; }
+.echo-orb:hover .flow-two { animation-duration: 2.1s; }
+.echo-orb:hover .flow-three { animation-duration: 3.4s; }
+.echo-orb:hover .orb-copy,
+.echo-orb.is-active .orb-copy { transform: scale(.96); color: #fff; text-shadow: 0 0 14px rgba(206,227,230,.46); }
+
+.echo-orb.is-active .flow-one { animation-duration: 1.7s; }
+.echo-orb.is-active .flow-two { animation-duration: 1.25s; }
+.echo-orb.is-active .flow-three { animation-duration: 2.1s; }
 
 .echo-orb:focus-visible { outline: 1px solid rgba(191,231,232,.78); outline-offset: 8px; }
 
