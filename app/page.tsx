@@ -1,10 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import RippleDistortion from './RippleDistortion';
 
 const Arrow = () => <span aria-hidden="true">↗</span>;
 
 export default function Home() {
+  const [orbActive, setOrbActive] = useState(false);
+
   return (
     <main className="hero-shell">
       <RippleDistortion
@@ -41,6 +44,25 @@ export default function Home() {
         </div>
 
       </section>
+
+      <div className="echo-orb-stage">
+        <button
+          className={`echo-orb${orbActive ? ' is-active' : ''}`}
+          type="button"
+          aria-label="内观回响"
+          aria-pressed={orbActive}
+          onClick={() => setOrbActive(true)}
+        >
+          <span className="orb-aura" aria-hidden="true" />
+          <span className="orb-flow flow-one" aria-hidden="true" />
+          <span className="orb-flow flow-two" aria-hidden="true" />
+          <span className="orb-flow flow-three" aria-hidden="true" />
+          <span className="orb-copy">
+            <span>内观</span>
+            <span>回响</span>
+          </span>
+        </button>
+      </div>
 
       <div className="surface-note" aria-hidden="true">
         <span>MOVE TO DISTURB THE SURFACE</span>
