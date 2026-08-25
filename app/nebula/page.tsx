@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Loader2, Orbit, Star, FileText, RefreshCw, History } from "lucide-react";
+import { ChevronLeft, Loader2, Orbit, Star, FileText, RefreshCw, User } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
 export default function NebulaEntryPage() {
@@ -59,9 +59,9 @@ export default function NebulaEntryPage() {
                 <Button
                   variant="outline"
                   className="w-full justify-start gap-2"
-                  onClick={() => router.push("/nebula/chart")}
+                  onClick={() => router.push("/profiles")}
                 >
-                  <Star className="w-4 h-4" /> 查看星云图
+                  <User className="w-4 h-4" /> 前往我的命盘
                 </Button>
                 <Button
                   variant="outline"
@@ -75,7 +75,7 @@ export default function NebulaEntryPage() {
                   className="w-full justify-start gap-2"
                   onClick={() => router.push("/profiles")}
                 >
-                  <History className="w-4 h-4" /> 历史报告
+                  <Star className="w-4 h-4" /> 管理命盘档案
                 </Button>
               </div>
             ) : (

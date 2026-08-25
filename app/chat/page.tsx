@@ -57,7 +57,7 @@ interface Conversation {
 const NAV_ITEMS = [
   { id: "chat", icon: MessageCircle, label: "新对话", href: "/chat" },
   { id: "nebula", icon: Orbit, label: "人生星云图", href: "/nebula" },
-  { id: "profiles", icon: User, label: "命运档案", href: "/profiles" },
+  { id: "profiles", icon: User, label: "我的命盘", href: "/profiles" },
   { id: "daily-fortune", icon: CalendarDays, label: "每日运势", href: "/daily-fortune" },
   { id: "subscription", icon: CreditCard, label: "订阅", href: "/subscription" },
 ];
@@ -545,7 +545,7 @@ function ChatContent() {
               return (
                 <button
                   key={item.id}
-                  onClick={() => item.href !== "/chat" && router.push(item.href)}
+                  onClick={() => item.href === "/chat" ? startNewChat() : router.push(item.href)}
                   title={item.label}
                   className={`hover:text-stone-600 transition-colors ${
                     isActive ? "text-stone-900" : ""

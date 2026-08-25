@@ -97,7 +97,7 @@ export default function SettingsPage() {
             <Orbit className="w-4 h-4" /> 人生星云图
           </Button>
           <Button variant="outline" className="w-full justify-start gap-2" onClick={() => router.push("/profiles")}>
-            <User className="w-4 h-4" /> 命运档案
+            <User className="w-4 h-4" /> 我的命盘
           </Button>
           <Button variant="outline" className="w-full justify-start gap-2" onClick={() => router.push("/daily-fortune")}>
             <CalendarDays className="w-4 h-4" /> 每日运势

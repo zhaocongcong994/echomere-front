@@ -23,6 +23,7 @@ interface ProfileData {
     lunarDate: { year: string; month: string; day: string };
     bodyStrength: "强" | "弱" | "中和";
     xiYongShen: { xi: string[]; ji: string[] };
+    assessment?: { kind: "heuristic"; warning: string };
   } | null;
 }
 
@@ -124,16 +125,21 @@ export default function NebulaConfirmPage() {
               </div>
             </div>
             <div>
-              <div className="text-stone-400 text-xs mb-1">身强弱</div>
+              <div className="text-stone-400 text-xs mb-1">身强弱（参考）</div>
               <div className="font-medium">{bazi.bodyStrength}</div>
             </div>
             <div>
-              <div className="text-stone-400 text-xs mb-1">喜神 / 忌神</div>
+              <div className="text-stone-400 text-xs mb-1">喜神 / 忌神（参考）</div>
               <div className="font-medium">
                 喜{bazi.xiYongShen.xi.join("、")} / 忌{bazi.xiYongShen.ji.join("、")}
               </div>
             </div>
           </div>
+          {bazi.assessment?.warning && (
+            <p className="text-xs leading-5 text-amber-700 bg-amber-50 rounded-xl px-3 py-2">
+              {bazi.assessment.warning}
+            </p>
+          )}
         </div>
 
         <div className="text-center">
@@ -164,8 +170,8 @@ export default function NebulaConfirmPage() {
           </div>
         )}
 
-        <Button className="w-full" size="lg" onClick={() => router.push("/nebula/chart")}>
-          确认无误生成星云图
+        <Button className="w-full" size="lg" onClick={() => router.push("/profiles")}>
+          确认并查看我的命盘
         </Button>
       </main>
     </div>
