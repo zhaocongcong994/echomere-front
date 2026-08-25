@@ -71,8 +71,9 @@ a { color: inherit; text-decoration: none; }
 }
 
 .site-nav a { pointer-events: auto; }
-.wordmark { display: inline-flex; align-items: baseline; gap: 14px; justify-self: start; }
+.wordmark { display: inline-flex; align-items: center; gap: 14px; justify-self: start; }
 .wordmark span { font-size: 13px; font-weight: 600; letter-spacing: .23em; }
+.wordmark i { display: block; width: 1px; height: 14px; background: rgba(238,237,233,.28); transform: scaleX(.6); }
 .wordmark em { font-family: var(--font-serif); font-size: 14px; font-style: normal; letter-spacing: .2em; color: rgba(238,237,233,.56); }
 .enter-link { justify-self: end; display: flex; align-items: center; gap: 28px; font-size: 11px; letter-spacing: .13em; color: rgba(238,237,233,.78); transition: color .25s ease; }
 .enter-link:hover { color: #fff; }
@@ -170,30 +171,20 @@ h1 span { display: block; }
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  font-family: var(--font-serif);
-  font-size: 13px;
+  font-family: var(--font-serif), serif;
+  font-size: 14px;
+  font-weight: 400;
   line-height: 1;
-  letter-spacing: .28em;
-  text-indent: .28em;
+  letter-spacing: .22em;
+  text-indent: .22em;
   text-shadow: 0 1px 12px rgba(0,0,0,.84);
   transition: color .45s ease, text-shadow .45s ease, transform .45s ease;
 }
 
-.orb-copy::before,
-.orb-copy::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  width: 15px;
-  height: 1px;
-  opacity: .42;
-  transition: width .45s ease, opacity .45s ease, box-shadow .45s ease;
+.orb-copy > span {
+  position: relative;
+  display: block;
 }
-
-.orb-copy::before { right: calc(100% + 14px); background: linear-gradient(90deg, transparent, currentColor); }
-.orb-copy::after { left: calc(100% + 14px); background: linear-gradient(90deg, currentColor, transparent); }
-.orb-copy > span:first-child { font-size: .88em; letter-spacing: .38em; text-indent: .38em; opacity: .72; }
-.orb-copy > span:last-child { font-size: 1.04em; letter-spacing: .28em; text-indent: .28em; }
 
 .echo-orb:hover {
   transform: scale(1.075);
@@ -206,8 +197,6 @@ h1 span { display: block; }
 .echo-orb:hover .flow-two { opacity: .92; animation-duration: 2.1s; filter: drop-shadow(0 0 9px rgba(116,84,255,.6)); }
 .echo-orb:hover .flow-three { opacity: .78; animation-duration: 3.4s; filter: drop-shadow(0 0 10px rgba(211,106,232,.46)); }
 .echo-orb:hover .orb-copy { transform: scale(.96); color: #fff; text-shadow: 0 0 13px rgba(220,180,239,.38); }
-.echo-orb:hover .orb-copy::before,
-.echo-orb:hover .orb-copy::after { width: 20px; opacity: .78; box-shadow: 0 0 7px rgba(220,169,235,.46); }
 
 .echo-orb.is-active {
   background: radial-gradient(circle, rgba(68,34,102,.22) 0 47%, rgba(91,42,126,.12) 62%, transparent 74%);

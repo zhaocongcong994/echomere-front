@@ -26,6 +26,7 @@ export default function Home() {
       <nav className="site-nav" aria-label="主导航">
         <a className="wordmark" href="#top" aria-label="ECHOMERE 洄映首页">
           <span>ECHOMERE</span>
+          <i aria-hidden="true" />
           <em>洄映</em>
         </a>
         <a className="enter-link" href="#begin">
