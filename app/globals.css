@@ -96,14 +96,25 @@ h1 { margin: 0 0 32px; display: flex; flex-direction: column; gap: clamp(12px, 1
 h1 span { display: block; }
 .intro { margin: 0; color: rgba(238,237,233,.58); font-family: var(--font-serif); font-size: 14px; line-height: 1.9; letter-spacing: .08em; }
 
-.mirror-cta {
-  --cta-accent: rgba(247, 246, 241, .88);
+.mirror-cta-stage {
   position: absolute;
   z-index: 5;
   left: 42.6vw;
   top: 48.5vh;
   width: 158px;
-  height: 52px;
+  height: 62px;
+  transform: translate(-50%, -50%);
+}
+
+.click-spark { position: relative; width: 100%; height: 100%; }
+.click-spark canvas { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; display: block; user-select: none; pointer-events: none; }
+
+.mirror-cta {
+  --cta-accent: rgba(247, 246, 241, .88);
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
   padding: 0;
   border: 1px solid transparent;
   color: var(--cta-accent);
@@ -111,7 +122,6 @@ h1 span { display: block; }
     linear-gradient(rgba(5,5,5,.34), rgba(5,5,5,.34)) padding-box,
     linear-gradient(110deg, transparent 2%, var(--cta-accent) 18%, rgba(255,255,255,.24) 50%, var(--cta-accent) 82%, transparent 98%) border-box;
   clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px);
-  transform: translate(-50%, -50%);
   cursor: pointer;
   backdrop-filter: blur(8px);
   box-shadow: 0 14px 34px rgba(0,0,0,.42);
@@ -141,14 +151,16 @@ h1 span { display: block; }
 .mirror-cta span {
   position: relative;
   z-index: 1;
+  display: block;
   font-family: var(--font-serif);
-  font-size: 14px;
-  letter-spacing: .22em;
-  text-indent: .22em;
+  font-size: 11px;
+  line-height: 1.55;
+  letter-spacing: .2em;
+  text-indent: .2em;
 }
 
 .mirror-cta:hover {
-  transform: translate(-50%, calc(-50% - 3px));
+  transform: translateY(-3px);
   box-shadow: 0 18px 40px rgba(0,0,0,.5), 0 0 18px rgba(255,255,255,.07);
 }
 
@@ -192,12 +204,12 @@ h1 span { display: block; }
   .hero-content { min-height: calc(100svh - 76px); padding: 48px 0 40px; grid-template-columns: 1fr; align-content: end; gap: 38px; }
   .hero-copy { max-width: 350px; }
   h1 { font-size: clamp(40px, 11vw, 58px); gap: 12px; }
-  .mirror-cta { width: 146px; height: 48px; }
+  .mirror-cta-stage { width: 146px; height: 58px; }
   .surface-note { display: none; }
 }
 
 @media (max-aspect-ratio: 6 / 5) {
-  .mirror-cta { left: 28vw; top: 53.5vh; }
+  .mirror-cta-stage { left: 28vw; top: 53.5vh; }
 }
 
 @media (max-width: 430px) {
