@@ -49,7 +49,7 @@ export default function Home() {
         <button
           className={`echo-orb${orbActive ? ' is-active' : ''}`}
           type="button"
-          aria-label="内观回响"
+          aria-label="建立回响"
           aria-pressed={orbActive}
           onClick={() => setOrbActive(true)}
         >
@@ -58,7 +58,7 @@ export default function Home() {
           <span className="orb-flow flow-two" aria-hidden="true" />
           <span className="orb-flow flow-three" aria-hidden="true" />
           <span className="orb-copy">
-            <span>内观</span>
+            <span>建立</span>
             <span>回响</span>
           </span>
         </button>
