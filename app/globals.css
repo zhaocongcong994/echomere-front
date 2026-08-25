@@ -21,6 +21,28 @@ a { color: inherit; text-decoration: none; }
   background: var(--black);
 }
 
+.variant-a {
+  --orb-one: rgba(48, 31, 59, .82);
+  --orb-one-hover: #684778;
+  --orb-one-line: rgba(189, 151, 207, .48);
+  --orb-one-glow: rgba(108, 65, 130, .28);
+  --orb-two: rgba(70, 57, 34, .82);
+  --orb-two-hover: #8a7040;
+  --orb-two-line: rgba(211, 181, 116, .44);
+  --orb-two-glow: rgba(154, 120, 54, .24);
+}
+
+.variant-b {
+  --orb-one: rgba(58, 31, 38, .84);
+  --orb-one-hover: #754451;
+  --orb-one-line: rgba(197, 136, 151, .44);
+  --orb-one-glow: rgba(125, 61, 77, .25);
+  --orb-two: rgba(34, 47, 54, .84);
+  --orb-two-hover: #45616c;
+  --orb-two-line: rgba(140, 176, 187, .42);
+  --orb-two-glow: rgba(67, 111, 126, .22);
+}
+
 .hero-shell > .ripple-distortion {
   position: absolute;
   inset: 0;
@@ -74,8 +96,10 @@ a { color: inherit; text-decoration: none; }
 .wordmark { display: inline-flex; align-items: baseline; gap: 14px; justify-self: start; }
 .wordmark span { font-size: 13px; font-weight: 600; letter-spacing: .23em; }
 .wordmark em { font-family: var(--font-serif); font-size: 14px; font-style: normal; letter-spacing: .2em; color: rgba(238,237,233,.56); }
-.nav-axis { display: flex; align-items: center; gap: 14px; color: rgba(238,237,233,.44); font-size: 8px; letter-spacing: .25em; }
-.nav-axis i { width: 38px; height: 1px; background: rgba(255,255,255,.22); }
+.variant-switch { display: flex; align-items: center; gap: 6px; padding: 4px; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; background: rgba(5,5,5,.24); backdrop-filter: blur(14px); pointer-events: auto; }
+.variant-switch button { appearance: none; border: 0; border-radius: 999px; padding: 8px 12px; color: rgba(238,237,233,.42); background: transparent; font-family: inherit; font-size: 9px; letter-spacing: .12em; cursor: pointer; transition: color .25s ease, background .25s ease; }
+.variant-switch button span { margin-left: 5px; }
+.variant-switch button.active { color: rgba(238,237,233,.92); background: rgba(255,255,255,.09); }
 .enter-link { justify-self: end; display: flex; align-items: center; gap: 28px; font-size: 11px; letter-spacing: .13em; color: rgba(238,237,233,.78); transition: color .25s ease; }
 .enter-link:hover { color: #fff; }
 
@@ -92,31 +116,62 @@ a { color: inherit; text-decoration: none; }
   pointer-events: none;
 }
 
-.hero-copy { pointer-events: none; }
+.hero-copy { max-width: 410px; pointer-events: none; }
 .kicker { margin: 0 0 24px; color: rgba(238,237,233,.47); font-size: 9px; font-weight: 500; letter-spacing: .28em; }
-h1 { margin: 0 0 28px; font-family: var(--font-serif); font-size: clamp(50px, 5vw, 80px); font-weight: 300; line-height: 1.08; letter-spacing: -.035em; text-shadow: 0 3px 28px rgba(0,0,0,.55); }
+h1 { margin: 0 0 32px; display: flex; flex-direction: column; gap: clamp(12px, 1.4vw, 22px); font-family: var(--font-serif); font-size: clamp(43px, 4.15vw, 66px); font-weight: 300; line-height: .98; letter-spacing: -.035em; text-shadow: 0 3px 28px rgba(0,0,0,.55); }
+h1 span { display: block; }
 .intro { margin: 0; color: rgba(238,237,233,.58); font-family: var(--font-serif); font-size: 14px; line-height: 1.9; letter-spacing: .08em; }
 
-.primary-action {
+.orb-actions {
   grid-column: 3;
   justify-self: end;
-  width: 154px;
-  height: 154px;
-  border: 1px solid rgba(255,255,255,.28);
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  pointer-events: auto;
+}
+
+.action-orb {
+  width: 112px;
+  height: 112px;
   border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  color: rgba(247,245,241,.9);
+  font-family: var(--font-serif);
+  font-size: 13px;
+  letter-spacing: .1em;
+  text-align: center;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 38px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.09);
+  transition: transform .35s cubic-bezier(.2,.8,.2,1), background .35s ease, border-color .35s ease, box-shadow .35s ease;
+}
+
+.action-orb::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  z-index: -1;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 50%;
+}
+
+.action-orb span {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 17px;
-  font-family: var(--font-serif);
-  font-size: 13px;
-  letter-spacing: .08em;
-  background: rgba(5,5,5,.12);
-  backdrop-filter: blur(7px);
-  pointer-events: auto;
-  transition: background .35s ease, color .35s ease, transform .35s ease;
+  width: 76%;
+  min-height: 44px;
 }
-.primary-action:hover { background: rgba(238,237,233,.92); color: #0b0b0b; transform: rotate(-4deg); }
+
+.orb-one { background: var(--orb-one); border-color: var(--orb-one-line); box-shadow: 0 14px 42px rgba(0,0,0,.42), 0 0 26px var(--orb-one-glow), inset 0 1px 0 rgba(255,255,255,.1); }
+.orb-two { width: 96px; height: 96px; margin-bottom: -12px; background: var(--orb-two); border-color: var(--orb-two-line); box-shadow: 0 14px 42px rgba(0,0,0,.42), 0 0 24px var(--orb-two-glow), inset 0 1px 0 rgba(255,255,255,.1); }
+.orb-one:hover { background: var(--orb-one-hover); transform: translateY(-7px) rotate(-3deg); box-shadow: 0 22px 54px rgba(0,0,0,.48), 0 0 34px var(--orb-one-glow), inset 0 1px 0 rgba(255,255,255,.16); }
+.orb-two:hover { background: var(--orb-two-hover); transform: translateY(-7px) rotate(4deg); box-shadow: 0 22px 54px rgba(0,0,0,.48), 0 0 32px var(--orb-two-glow), inset 0 1px 0 rgba(255,255,255,.16); }
 
 .surface-note {
   position: absolute;
@@ -145,12 +200,15 @@ h1 { margin: 0 0 28px; font-family: var(--font-serif); font-size: clamp(50px, 5v
 
 @media (max-width: 760px) {
   .site-nav { height: 76px; grid-template-columns: 1fr auto; }
-  .nav-axis { display: none; }
+  .variant-switch { position: absolute; top: 88px; left: 0; }
+  .variant-switch button span { display: none; }
   .enter-link { gap: 12px; }
   .hero-content { min-height: calc(100svh - 76px); padding: 48px 0 40px; grid-template-columns: 1fr; align-content: end; gap: 38px; }
   .hero-copy { max-width: 350px; }
-  h1 { font-size: clamp(46px, 13vw, 66px); }
-  .primary-action { grid-column: 1; justify-self: start; width: 126px; height: 126px; }
+  h1 { font-size: clamp(40px, 11vw, 58px); gap: 12px; }
+  .orb-actions { grid-column: 1; justify-self: start; }
+  .action-orb { width: 102px; height: 102px; }
+  .orb-two { width: 88px; height: 88px; }
   .surface-note { display: none; }
 }
 
