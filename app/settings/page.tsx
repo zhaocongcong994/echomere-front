@@ -10,10 +10,23 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ChevronLeft, Loader2, Orbit, User, CalendarDays, CreditCard, LogOut } from "lucide-react";
 
+interface SettingsData {
+  user: { email: string | null; name: string | null } | null;
+  primaryProfile: { id: string } | null;
+  bazi: {
+    year: string;
+    month: string;
+    day: string;
+    hour: string;
+    dayMaster: { gan: string; zhi: string; wuxing: string };
+    genderLabel: string;
+  } | null;
+}
+
 export default function SettingsPage() {
   const router = useRouter();
   const { logout } = useAuth();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<SettingsData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

@@ -21,6 +21,16 @@ const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MINUTES = Array.from({ length: 60 }, (_, i) => i);
 
+interface BaziPreview {
+  year: string;
+  month: string;
+  day: string;
+  hour: string;
+  dayMaster: { gan: string; zhi: string; wuxing: string };
+  genderLabel: string;
+  wuxing: Record<string, number>;
+}
+
 function OnboardingContent() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -37,11 +47,7 @@ function OnboardingContent() {
     job: "",
     knowledge: "",
   });
-  const [preview, setPreview] = useState<any>(null);
-
-  const buildDateTime = () => {
-    return new Date(form.year, form.month - 1, form.day, form.hour, form.minute);
-  };
+  const [preview, setPreview] = useState<BaziPreview | null>(null);
 
   const fetchPreview = async () => {
     const res = await apiFetch("/bazi", {

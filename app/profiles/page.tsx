@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,18 +55,29 @@ export default function ProfilesPage() {
   });
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchProfiles();
-  }, []);
-
-  const fetchProfiles = async () => {
+  const fetchProfiles = useCallback(async () => {
     const res = await apiFetch("/profiles");
     if (res.ok) {
       const data = await res.json();
       setProfiles(data);
     }
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch("/profiles")
+      .then((response) => (response.ok ? response.json() : []))
+      .then((data) => {
+        if (cancelled) return;
+        setProfiles(data);
+        setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const createProfile = async () => {
     setSubmitting(true);

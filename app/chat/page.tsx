@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { apiFetch } from "@/lib/api";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
@@ -77,42 +77,13 @@ function ChatContent() {
   const [expandedThinking, setExpandedThinking] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!authLoading && !user) router.push("/login");
-  }, [authLoading, user, router]);
-
-  useEffect(() => {
-    if (user) fetchConversations();
-  }, [user]);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
-
-  useEffect(() => {
-    const q = searchParams.get("question");
-    if (!q) {
-      sessionStorage.removeItem("_ms_autosend_lock");
-      return;
-    }
-    if (!user) return;
-    if (sessionStorage.getItem("_ms_autosend_lock")) return;
-    sessionStorage.setItem("_ms_autosend_lock", "1");
-    const decoded = decodeURIComponent(q);
-    setInput(decoded);
-    // 清除 URL query，避免刷新重复发送
-    router.replace("/chat");
-    // 使用 setTimeout 确保 input 已更新且组件已渲染
-    setTimeout(() => sendMessage(decoded), 0);
-  }, [searchParams, user, router]);
-
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     const res = await apiFetch("/conversations");
     if (res.ok) {
       const data = await res.json();
       setConversations(data);
     }
-  };
+  }, []);
 
   const loadConversation = async (id: string) => {
     const res = await apiFetch(`/conversations/${id}`);
@@ -120,12 +91,7 @@ function ChatContent() {
     const data = await res.json();
     setCurrentConversationId(data.id);
     setMode(data.mode);
-    setMessages(
-      data.messages.map((m: Message) => ({
-        ...m,
-        routeReason: m.toolCalls ? extractRouteReason(m.toolCalls) : undefined,
-      }))
-    );
+    setMessages(data.messages);
     setSidebarOpen(false);
   };
 
@@ -135,15 +101,7 @@ function ChatContent() {
     setMode("suiyuan");
   };
 
-  const extractRouteReason = (toolCalls: string): string | undefined => {
-    try {
-      return undefined;
-    } catch {
-      return undefined;
-    }
-  };
-
-  const sendMessage = async (text: string) => {
+  const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || loading) return;
     setLoading(true);
     setInput("");
@@ -185,7 +143,7 @@ function ChatContent() {
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
-      let assistantMessage: Message = {
+      const assistantMessage: Message = {
         id: `assistant-${Date.now()}`,
         role: "assistant",
         content: "",
@@ -229,7 +187,7 @@ function ChatContent() {
           }
         }
       }
-    } catch (e) {
+    } catch {
       setMessages((prev) => [
         ...prev,
         {
@@ -241,7 +199,44 @@ function ChatContent() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentConversationId, fetchConversations, loading, mode]);
+
+  useEffect(() => {
+    if (!authLoading && !user) router.push("/login");
+  }, [authLoading, user, router]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    let cancelled = false;
+    apiFetch("/conversations")
+      .then((response) => (response.ok ? response.json() : []))
+      .then((data) => {
+        if (!cancelled) setConversations(data);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
+  useEffect(() => {
+    const question = searchParams.get("question");
+    if (!question) {
+      sessionStorage.removeItem("_ms_autosend_lock");
+      return;
+    }
+    if (!user || sessionStorage.getItem("_ms_autosend_lock")) return;
+
+    sessionStorage.setItem("_ms_autosend_lock", "1");
+    router.replace("/chat");
+    const timeoutId = window.setTimeout(() => void sendMessage(question), 0);
+    return () => window.clearTimeout(timeoutId);
+  }, [router, searchParams, sendMessage, user]);
 
   if (authLoading) {
     return (

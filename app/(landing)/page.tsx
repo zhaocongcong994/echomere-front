@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Sparkles, Menu, X, BookOpen, ChevronDown, Loader2 } from "lucide-react";
+import { Sparkles, Menu, X, Loader2 } from "lucide-react";
 
 export default function LandingPage() {
   const router = useRouter();

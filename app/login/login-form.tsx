@@ -50,7 +50,7 @@ export function LoginForm() {
       }
 
       router.push(callback);
-    } catch (e) {
+    } catch {
       setError("网络异常，请重试");
     } finally {
       setLoading(false);

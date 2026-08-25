@@ -1,8 +1,8 @@
 services:
   backend:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: ${SOOTHSAYER_BACKEND_PATH:-../backend}
+      dockerfile: Dockerfile
     environment:
       - DATABASE_URL=file:/data/dev.db
       - JWT_SECRET=${JWT_SECRET:-__metasight_dev_secret__}
@@ -20,8 +20,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_BASE_URL=
     environment:
-      - NEXT_PUBLIC_API_BASE_URL=""
       - PORT=3000
     networks:
       - metasight-net
@@ -44,7 +45,6 @@ services:
 
 volumes:
   metasight-data:
-    external: true
 
 networks:
   metasight-net:

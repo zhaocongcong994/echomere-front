@@ -6,9 +6,32 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, Loader2, Sun } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 
+interface BaziSummary {
+  year: string;
+  month: string;
+  day: string;
+  hour: string;
+  dayMaster: { gan: string; zhi: string; wuxing: string };
+}
+
+type DailyFortuneResponse =
+  | { error: "NO_PROFILE" }
+  | {
+      date: string;
+      profile: { name: string | null; bazi: BaziSummary };
+      today: {
+        yearGanZhi: string;
+        monthGanZhi: string;
+        dayGanZhi: string;
+        dayShiShen: string;
+        dayWuXing: string;
+      };
+      year: { ganZhi: string; shiShen: string; naYin: string };
+    };
+
 export default function DailyFortunePage() {
   const router = useRouter();
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<DailyFortuneResponse | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,7 +51,7 @@ export default function DailyFortunePage() {
     );
   }
 
-  if (data?.error === "NO_PROFILE") {
+  if (data && "error" in data) {
     return (
       <div className="min-h-screen bg-stone-50 flex flex-col">
         <header className="bg-white border-b border-stone-100">
@@ -46,6 +69,8 @@ export default function DailyFortunePage() {
       </div>
     );
   }
+
+  if (!data) return null;
 
   return (
     <div className="min-h-screen bg-stone-50">
