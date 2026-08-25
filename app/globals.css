@@ -206,19 +206,50 @@ h1 span { display: block; }
 .echo-orb:hover .flow-three { animation-duration: 3.4s; }
 .echo-orb:hover .orb-copy,
 .echo-orb.is-active .orb-copy {
+  --shimmer-angle: 15deg;
+  --shimmer-track-height: 200px;
+  --shimmer-duration: 3000;
+  --_spread: calc(4ch + 80px);
+  --_speed: 200;
+  --_fg: oklch(from currentColor l c h / calc(alpha * .2));
+  --_bg: currentColor;
+  --_mix-96: color-mix(in oklch, var(--_fg), var(--_bg) 96%);
+  --_mix-83: color-mix(in oklch, var(--_fg), var(--_bg) 83%);
+  --_mix-67: color-mix(in oklch, var(--_fg), var(--_bg) 67%);
+  --_mix-50: color-mix(in oklch, var(--_fg), var(--_bg) 50%);
+  --_mix-33: color-mix(in oklch, var(--_fg), var(--_bg) 33%);
+  --_mix-17: color-mix(in oklch, var(--_fg), var(--_bg) 17%);
+  --_mix-4: color-mix(in oklch, var(--_fg), var(--_bg) 4%);
+  --_gradient-width: calc(var(--_spread) + var(--shimmer-track-height) * tan(var(--shimmer-angle)));
+  --_active-distance: calc(200px + var(--_gradient-width));
+  --_duration: var(--shimmer-duration);
+  --_repeat-delay: calc(20000 / var(--_speed));
+  --_repeat-delay-px: calc(var(--_repeat-delay) * var(--_active-distance) / var(--_duration));
+  --_bg-width: calc(100% + 100% + var(--_gradient-width) + var(--_repeat-delay-px));
+  --_position: calc((100% - var(--_gradient-width) - var(--_repeat-delay-px)) / 2 + var(--_gradient-width) / 2 + var(--_repeat-delay-px));
   transform: scale(.96);
-  color: transparent;
-  background: linear-gradient(105deg,
-    rgba(240,242,242,.68) 0%,
-    rgba(240,242,242,.68) 43%,
-    rgba(108,108,110,.5) 47%,
-    rgba(0,0,0,.98) 50%,
-    rgba(108,108,110,.5) 53%,
-    rgba(240,242,242,.68) 57%,
-    rgba(240,242,242,.68) 100%);
-  background-size: 250% 100%;
+  color: rgba(255,255,255,.8);
+  background: linear-gradient(calc(90deg + var(--shimmer-angle)),
+    var(--_bg) calc(var(--_position) - var(--_spread) * .5),
+    var(--_mix-96) calc(var(--_position) - var(--_spread) * .44),
+    var(--_mix-83) calc(var(--_position) - var(--_spread) * .37),
+    var(--_mix-67) calc(var(--_position) - var(--_spread) * .31),
+    var(--_mix-50) calc(var(--_position) - var(--_spread) * .25),
+    var(--_mix-33) calc(var(--_position) - var(--_spread) * .19),
+    var(--_mix-17) calc(var(--_position) - var(--_spread) * .12),
+    var(--_mix-4) calc(var(--_position) - var(--_spread) * .06),
+    var(--_fg) var(--_position),
+    var(--_mix-4) calc(var(--_position) + var(--_spread) * .06),
+    var(--_mix-17) calc(var(--_position) + var(--_spread) * .12),
+    var(--_mix-33) calc(var(--_position) + var(--_spread) * .19),
+    var(--_mix-50) calc(var(--_position) + var(--_spread) * .25),
+    var(--_mix-67) calc(var(--_position) + var(--_spread) * .31),
+    var(--_mix-83) calc(var(--_position) + var(--_spread) * .37),
+    var(--_mix-96) calc(var(--_position) + var(--_spread) * .44),
+    var(--_bg) calc(var(--_position) + var(--_spread) * .5)) 0 0 / var(--_bg-width) 100% no-repeat;
   -webkit-background-clip: text;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
   text-shadow: none;
   animation: text-shimmer-sweep 3.1s linear infinite backwards;
 }
@@ -226,7 +257,6 @@ h1 span { display: block; }
 .echo-orb.is-active .flow-one { animation-duration: 1.7s; }
 .echo-orb.is-active .flow-two { animation-duration: 1.25s; }
 .echo-orb.is-active .flow-three { animation-duration: 2.1s; }
-.echo-orb.is-active .orb-copy { animation-duration: 1.6s; }
 
 .echo-orb:focus-visible { outline: 1px solid rgba(191,231,232,.78); outline-offset: 8px; }
 
@@ -279,8 +309,7 @@ h1 span { display: block; }
 }
 
 @keyframes text-shimmer-sweep {
-  from { background-position: 100% 0; }
-  to { background-position: -150% 0; }
+  0% { background-position: 100% 0; }
 }
 
 @media (max-width: 760px) {
