@@ -1,4 +1,5 @@
-const BACKEND_ORIGIN = "http://81.70.23.109:8080";
+const BACKEND_ORIGIN = "http://81.70.23.109.sslip.io:8080";
+const BACKEND_HOST = "81.70.23.109";
 
 type RouteParams = { params: Promise<{ path: string[] }> };
 
@@ -12,6 +13,7 @@ async function proxy(request: Request, { params }: RouteParams) {
   headers.delete("host");
   headers.delete("content-length");
   headers.delete("accept-encoding");
+  headers.set("host", BACKEND_HOST);
 
   const hasBody = request.method !== "GET" && request.method !== "HEAD";
   const upstream = await fetch(targetUrl, {
