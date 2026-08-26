@@ -623,3 +623,81 @@ input::placeholder, textarea::placeholder { color: rgba(236,233,228,.3); }
   .profile-work-grid { grid-template-columns: 1fr; }
   .choice-chip { padding-inline: 8px; }
 }
+
+/* The chat composer borrows the homepage orb's restrained spectral edge. */
+.chat-composer {
+  z-index: 0;
+  border-radius: 999px;
+  isolation: isolate;
+}
+.chat-composer::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  z-index: 0;
+  padding: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: .64;
+  background: linear-gradient(
+    100deg,
+    rgba(83,207,216,.72),
+    rgba(127,104,219,.76),
+    rgba(229,121,185,.72),
+    rgba(222,171,94,.68),
+    rgba(184,242,238,.74),
+    rgba(83,207,216,.72)
+  );
+  background-size: 280% 100%;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  filter: drop-shadow(0 0 4px rgba(127,104,219,.18));
+  animation: composer-edge-marquee 8s linear infinite;
+  transition: opacity .3s ease, filter .3s ease;
+}
+.chat-composer:focus-within::before {
+  opacity: 1;
+  filter: drop-shadow(0 0 6px rgba(83,207,216,.3)) drop-shadow(0 0 7px rgba(229,121,185,.24));
+}
+.chat-composer-input {
+  position: relative;
+  z-index: 1;
+  border-color: rgba(255,255,255,.1) !important;
+  background: rgba(6,6,8,.9) !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025), 0 12px 36px rgba(0,0,0,.24);
+}
+.chat-composer-input:focus {
+  border-color: transparent !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035), 0 14px 42px rgba(0,0,0,.32) !important;
+}
+.chat-composer-send {
+  z-index: 2;
+  border: 1px solid transparent !important;
+  color: rgba(241,237,242,.92) !important;
+  background:
+    linear-gradient(145deg, rgba(19,16,23,.98), rgba(7,10,13,.98)) padding-box,
+    linear-gradient(105deg, #53cfd8, #7f68db, #e579b9, #deab5e, #b8f2ee, #53cfd8) border-box !important;
+  background-size: 100% 100%, 280% 100% !important;
+  box-shadow: inset 0 0 14px rgba(137,102,165,.08), 0 0 10px rgba(127,104,219,.12) !important;
+  animation: composer-button-marquee 8s linear infinite;
+}
+.chat-composer-send:hover:not(:disabled) {
+  color: #fff !important;
+  box-shadow: inset 0 0 18px rgba(137,102,165,.16), 0 0 13px rgba(83,207,216,.2), 0 0 15px rgba(229,121,185,.16) !important;
+}
+
+@keyframes composer-edge-marquee {
+  from { background-position: 0% 50%; }
+  to { background-position: 280% 50%; }
+}
+
+@keyframes composer-button-marquee {
+  from { background-position: 0 0, 0% 50%; }
+  to { background-position: 0 0, 280% 50%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-composer::before,
+  .chat-composer-send { animation: none; }
+}

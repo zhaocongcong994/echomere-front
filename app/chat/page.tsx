@@ -419,18 +419,18 @@ function ChatContent() {
               </div>
 
               <div className="w-full max-w-2xl mb-4">
-                <div className="relative">
+                <div className="relative chat-composer">
                   <Input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="心有所问，洄映为答…"
-                    className="h-12 pr-14 rounded-full border-stone-200 bg-stone-50"
+                    className="h-12 pr-14 rounded-full border-stone-200 bg-stone-50 chat-composer-input"
                     onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
                     disabled={loading}
                   />
                   <Button
                     size="icon"
-                    className="absolute right-1 top-1 rounded-full"
+                    className="absolute right-1 top-1 rounded-full chat-composer-send"
                     onClick={() => sendMessage(input)}
                     disabled={loading || !input.trim()}
                   >
@@ -521,18 +521,18 @@ function ChatContent() {
 
             <div className="p-4 bg-white">
               <div className="max-w-3xl mx-auto">
-                <div className="relative">
+                <div className="relative chat-composer">
                   <Input
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="心有所问，洄映为答…"
-                    className="h-12 pr-14 rounded-full border-stone-200 bg-stone-50"
+                    className="h-12 pr-14 rounded-full border-stone-200 bg-stone-50 chat-composer-input"
                     onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
                     disabled={loading}
                   />
                   <Button
                     size="icon"
-                    className="absolute right-1 top-1 rounded-full"
+                    className="absolute right-1 top-1 rounded-full chat-composer-send"
                     onClick={() => sendMessage(input)}
                     disabled={loading || !input.trim()}
                   >
