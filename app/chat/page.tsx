@@ -22,6 +22,7 @@ import {
   Orbit,
   CreditCard,
   Home,
+  ArrowUp,
 } from "lucide-react";
 
 const MODES = [
@@ -52,21 +53,6 @@ interface Conversation {
   mode: string;
   title: string;
   updatedAt: string;
-}
-
-function EchoRippleIcon({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className={className}
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <ellipse cx="12" cy="12" rx="8.25" ry="4.15" stroke="currentColor" strokeWidth="1.35" />
-      <ellipse cx="12" cy="12" rx="4.65" ry="2.15" stroke="currentColor" strokeWidth="1.35" opacity="0.82" />
-    </svg>
-  );
 }
 
 const NAV_ITEMS = [
@@ -445,11 +431,11 @@ function ChatContent() {
                   />
                   <Button
                     size="icon"
-                    className="absolute right-1 top-1 rounded-full chat-composer-send"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full chat-composer-send"
                     onClick={() => sendMessage(input)}
                     disabled={loading || !input.trim()}
                   >
-                    <EchoRippleIcon className="w-[18px] h-[18px] chat-composer-ripple" />
+                    <ArrowUp className="w-[17px] h-[17px]" strokeWidth={1.45} />
                   </Button>
                 </div>
               </div>
@@ -547,11 +533,11 @@ function ChatContent() {
                   />
                   <Button
                     size="icon"
-                    className="absolute right-1 top-1 rounded-full chat-composer-send"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full chat-composer-send"
                     onClick={() => sendMessage(input)}
                     disabled={loading || !input.trim()}
                   >
-                    <EchoRippleIcon className="w-[18px] h-[18px] chat-composer-ripple" />
+                    <ArrowUp className="w-[17px] h-[17px]" strokeWidth={1.45} />
                   </Button>
                 </div>
               </div>
