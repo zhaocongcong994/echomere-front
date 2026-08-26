@@ -1,5 +1,14 @@
-const BACKEND_ORIGIN = "http://81.70.23.109.sslip.io:8080";
-const BACKEND_HOST = "81.70.23.109";
+const REMOTE_BACKEND_ORIGIN = "http://81.70.23.109.sslip.io:8080";
+const BACKEND_ORIGIN = (
+  process.env.ECHOMERE_BACKEND_ORIGIN ||
+  (process.env.NODE_ENV === "production"
+    ? REMOTE_BACKEND_ORIGIN
+    : "http://127.0.0.1:3001")
+).replace(/\/$/, "");
+
+const BACKEND_HOST =
+  process.env.ECHOMERE_BACKEND_HOST ||
+  (BACKEND_ORIGIN === REMOTE_BACKEND_ORIGIN ? "81.70.23.109" : null);
 
 type RouteParams = { params: Promise<{ path: string[] }> };
 
@@ -13,7 +22,7 @@ async function proxy(request: Request, { params }: RouteParams) {
   headers.delete("host");
   headers.delete("content-length");
   headers.delete("accept-encoding");
-  headers.set("host", BACKEND_HOST);
+  if (BACKEND_HOST) headers.set("host", BACKEND_HOST);
 
   const hasBody = request.method !== "GET" && request.method !== "HEAD";
   const upstream = await fetch(targetUrl, {
