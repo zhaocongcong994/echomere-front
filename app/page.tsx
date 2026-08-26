@@ -29,7 +29,7 @@ export default function Home() {
           <i aria-hidden="true" />
           <em>洄映</em>
         </a>
-        <a className="enter-link" href="#begin">
+        <a className="enter-link" href="/login">
           进入洄映 <Arrow />
         </a>
       </nav>
@@ -52,7 +52,10 @@ export default function Home() {
           type="button"
           aria-label="建立回响"
           aria-pressed={orbActive}
-          onClick={() => setOrbActive(true)}
+          onClick={() => {
+            setOrbActive(true);
+            window.setTimeout(() => window.location.assign('/login'), 360);
+          }}
         >
           <span className="orb-aura" aria-hidden="true" />
           <span className="orb-flow flow-one" aria-hidden="true" />

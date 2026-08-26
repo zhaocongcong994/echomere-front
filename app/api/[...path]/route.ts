@@ -1,0 +1,41 @@
+const BACKEND_ORIGIN = "http://81.70.23.109:8080";
+
+type RouteParams = { params: Promise<{ path: string[] }> };
+
+async function proxy(request: Request, { params }: RouteParams) {
+  const { path } = await params;
+  const incomingUrl = new URL(request.url);
+  const targetUrl = new URL(`/api/${path.map(encodeURIComponent).join("/")}`, BACKEND_ORIGIN);
+  targetUrl.search = incomingUrl.search;
+
+  const headers = new Headers(request.headers);
+  headers.delete("host");
+  headers.delete("content-length");
+  headers.delete("accept-encoding");
+
+  const hasBody = request.method !== "GET" && request.method !== "HEAD";
+  const upstream = await fetch(targetUrl, {
+    method: request.method,
+    headers,
+    body: hasBody ? await request.arrayBuffer() : undefined,
+    redirect: "manual",
+  });
+
+  const responseHeaders = new Headers(upstream.headers);
+  responseHeaders.delete("content-encoding");
+  responseHeaders.delete("content-length");
+  responseHeaders.set("cache-control", "no-store");
+
+  return new Response(upstream.body, {
+    status: upstream.status,
+    statusText: upstream.statusText,
+    headers: responseHeaders,
+  });
+}
+
+export const GET = proxy;
+export const POST = proxy;
+export const PUT = proxy;
+export const PATCH = proxy;
+export const DELETE = proxy;
+export const OPTIONS = proxy;
