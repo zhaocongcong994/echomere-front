@@ -54,6 +54,21 @@ interface Conversation {
   updatedAt: string;
 }
 
+function EchoRippleIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className={className}
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <ellipse cx="12" cy="12" rx="8.25" ry="4.15" stroke="currentColor" strokeWidth="1.35" />
+      <ellipse cx="12" cy="12" rx="4.65" ry="2.15" stroke="currentColor" strokeWidth="1.35" opacity="0.82" />
+    </svg>
+  );
+}
+
 const NAV_ITEMS = [
   { id: "chat", icon: MessageCircle, label: "新对话", href: "/chat" },
   { id: "nebula", icon: Orbit, label: "人生星云图", href: "/nebula" },
@@ -434,7 +449,7 @@ function ChatContent() {
                     onClick={() => sendMessage(input)}
                     disabled={loading || !input.trim()}
                   >
-                    <Sparkles className="w-4 h-4" />
+                    <EchoRippleIcon className="w-[18px] h-[18px] chat-composer-ripple" />
                   </Button>
                 </div>
               </div>
@@ -536,7 +551,7 @@ function ChatContent() {
                     onClick={() => sendMessage(input)}
                     disabled={loading || !input.trim()}
                   >
-                    <Sparkles className="w-4 h-4" />
+                    <EchoRippleIcon className="w-[18px] h-[18px] chat-composer-ripple" />
                   </Button>
                 </div>
               </div>
