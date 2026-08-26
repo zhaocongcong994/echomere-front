@@ -125,10 +125,8 @@ export default function ProfilesPage() {
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-xl font-medium">我的命盘</h1>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger>
-              <Button size="sm">
-                <Plus className="w-4 h-4 mr-1" /> 新增档案
-              </Button>
+            <DialogTrigger render={<Button size="sm" />}>
+              <Plus className="w-4 h-4 mr-1" /> 新增档案
             </DialogTrigger>
             <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
