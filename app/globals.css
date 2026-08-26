@@ -456,3 +456,76 @@ input::placeholder, textarea::placeholder { color: rgba(236,233,228,.3); }
   color: var(--foreground);
   box-shadow: 0 26px 80px rgba(0,0,0,.58), 0 0 0 1px rgba(151,104,180,.08);
 }
+
+/* Onboarding birth fields use a deliberate two-band rhythm instead of
+   distributing fit-content selects across oversized grid cells. */
+.birth-step { display: grid; gap: 24px; }
+.birth-step-heading { display: grid; gap: 7px; }
+.birth-step-heading h2,
+.birth-step-heading p { margin: 0; }
+.birth-group {
+  display: grid;
+  gap: 13px;
+  padding: 17px 18px 18px;
+  border: 1px solid rgba(255,255,255,.085);
+  border-radius: 14px;
+  background: linear-gradient(140deg, rgba(255,255,255,.022), rgba(255,255,255,.006));
+}
+.birth-group-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+.birth-group-heading h3 {
+  margin: 0;
+  color: rgba(238,237,233,.82);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: .14em;
+}
+.birth-group-heading span {
+  color: rgba(238,237,233,.34);
+  font-size: 10px;
+  letter-spacing: .08em;
+}
+.birth-date-grid,
+.birth-time-grid { display: grid; gap: 12px; }
+.birth-date-grid { grid-template-columns: 1.2fr 1fr 1fr; }
+.birth-time-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.birth-field { min-width: 0; }
+.birth-field > label {
+  display: block;
+  margin-bottom: 7px;
+  color: rgba(238,237,233,.5);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .1em;
+}
+.birth-field [data-slot="select-trigger"] {
+  width: 100%;
+  height: 42px;
+  padding-inline: 13px;
+  border-color: rgba(255,255,255,.13);
+  border-radius: 10px;
+  background: rgba(4,4,6,.32);
+  font-size: 14px;
+}
+.birth-field [data-slot="select-trigger"]:hover {
+  border-color: rgba(202,166,217,.34);
+  background: rgba(41,29,48,.24);
+}
+.birth-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,.075);
+}
+
+@media (max-width: 520px) {
+  .birth-step { gap: 18px; }
+  .birth-group { padding: 15px; }
+  .birth-date-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .birth-field-year { grid-column: 1 / -1; }
+}

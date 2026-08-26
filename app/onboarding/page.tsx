@@ -132,12 +132,19 @@ function OnboardingContent() {
           )}
 
           {step === 2 && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-medium">填写出生时间</h2>
-              <p className="text-sm text-stone-500">阳历 / 公历</p>
+            <div className="birth-step">
+              <div className="birth-step-heading">
+                <h2 className="text-xl font-medium">填写出生时间</h2>
+                <p className="text-sm text-stone-500">时间越准确，映照越清晰</p>
+              </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <div>
+              <section className="birth-group" aria-labelledby="birth-date-heading">
+                <div className="birth-group-heading">
+                  <h3 id="birth-date-heading">出生日期</h3>
+                  <span>阳历 / 公历</span>
+                </div>
+                <div className="birth-date-grid">
+                <div className="birth-field birth-field-year">
                   <Label>年</Label>
                   <Select value={String(form.year)} onValueChange={(v) => setForm({ ...form, year: Number(v) })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -146,7 +153,7 @@ function OnboardingContent() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
+                <div className="birth-field">
                   <Label>月</Label>
                   <Select value={String(form.month)} onValueChange={(v) => setForm({ ...form, month: Number(v) })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -155,7 +162,7 @@ function OnboardingContent() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
+                <div className="birth-field">
                   <Label>日</Label>
                   <Select value={String(form.day)} onValueChange={(v) => setForm({ ...form, day: Number(v) })}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
@@ -164,30 +171,37 @@ function OnboardingContent() {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label>时</Label>
-                  <Select value={String(form.hour)} onValueChange={(v) => setForm({ ...form, hour: Number(v) })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent className="max-h-60">
-                      {HOURS.map((h) => <SelectItem key={h} value={String(h)}>{h}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
                 </div>
-                <div>
-                  <Label>分</Label>
-                  <Select value={String(form.minute)} onValueChange={(v) => setForm({ ...form, minute: Number(v) })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent className="max-h-60">
-                      {MINUTES.map((m) => <SelectItem key={m} value={String(m)}>{m}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              </section>
 
-              <div className="flex justify-between pt-4">
+              <section className="birth-group" aria-labelledby="birth-time-heading">
+                <div className="birth-group-heading">
+                  <h3 id="birth-time-heading">出生时刻</h3>
+                  <span>24 小时制</span>
+                </div>
+                <div className="birth-time-grid">
+                  <div className="birth-field">
+                    <Label>时</Label>
+                    <Select value={String(form.hour)} onValueChange={(v) => setForm({ ...form, hour: Number(v) })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {HOURS.map((h) => <SelectItem key={h} value={String(h)}>{h}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="birth-field">
+                    <Label>分</Label>
+                    <Select value={String(form.minute)} onValueChange={(v) => setForm({ ...form, minute: Number(v) })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {MINUTES.map((m) => <SelectItem key={m} value={String(m)}>{m}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </section>
+
+              <div className="birth-actions">
                 <Button variant="ghost" onClick={back}><ChevronLeft className="w-4 h-4" /> 返回</Button>
                 <Button onClick={next}>下一步</Button>
               </div>
