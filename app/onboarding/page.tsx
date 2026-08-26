@@ -20,6 +20,16 @@ const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
 const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MINUTES = Array.from({ length: 60 }, (_, i) => i);
+const GENDER_OPTIONS = [
+  { value: "male", label: "男" },
+  { value: "female", label: "女" },
+  { value: "other", label: "其他" },
+];
+const KNOWLEDGE_OPTIONS = [
+  { value: "none", label: "初识" },
+  { value: "basic", label: "略知一二" },
+  { value: "advanced", label: "比较熟悉" },
+];
 
 interface BaziPreview {
   year: string;
@@ -230,43 +240,77 @@ function OnboardingContent() {
           )}
 
           {step === 4 && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-medium">个人信息</h2>
-              <div>
-                <Label>性别 *</Label>
-                <Select value={form.gender} onValueChange={(v) => setForm({ ...form, gender: v as string })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">男</SelectItem>
-                    <SelectItem value="female">女</SelectItem>
-                    <SelectItem value="other">其他</SelectItem>
-                  </SelectContent>
-                </Select>
+            <div className="profile-step">
+              <div className="profile-step-heading">
+                <h2 className="text-xl font-medium">个人信息</h2>
+                <p className="text-sm text-stone-500">让每一次回应，更贴近你此刻的处境</p>
               </div>
-              <div>
-                <Label>感情状态</Label>
-                <Input placeholder="单身 / 恋爱中 / 已婚" value={form.relationship} onChange={(e) => setForm({ ...form, relationship: e.target.value })} />
-              </div>
-              <div>
-                <Label>行业</Label>
-                <Input placeholder="互联网 / 金融 / 教育…" value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} />
-              </div>
-              <div>
-                <Label>职业</Label>
-                <Input placeholder="产品经理 / 教师 / 设计师…" value={form.job} onChange={(e) => setForm({ ...form, job: e.target.value })} />
-              </div>
-              <div>
-                <Label>命理了解程度</Label>
-                <Select value={form.knowledge} onValueChange={(v) => setForm({ ...form, knowledge: v as string })}>
-                  <SelectTrigger><SelectValue placeholder="请选择" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">完全不了解</SelectItem>
-                    <SelectItem value="basic">略知一二</SelectItem>
-                    <SelectItem value="advanced">比较熟悉</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex justify-between pt-4">
+
+              <section className="profile-group" aria-labelledby="identity-heading">
+                <div className="profile-group-heading">
+                  <h3 id="identity-heading">身份轮廓</h3>
+                  <span>仅用于个性化解读</span>
+                </div>
+
+                <div className="profile-field">
+                  <Label>性别</Label>
+                  <div className="choice-row" role="group" aria-label="性别">
+                    {GENDER_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={`choice-chip ${form.gender === option.value ? "is-selected" : ""}`}
+                        aria-pressed={form.gender === option.value}
+                        onClick={() => setForm({ ...form, gender: option.value })}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="profile-field">
+                  <Label htmlFor="relationship">感情状态</Label>
+                  <Input id="relationship" placeholder="如：单身、恋爱中、已婚" value={form.relationship} onChange={(e) => setForm({ ...form, relationship: e.target.value })} />
+                </div>
+              </section>
+
+              <section className="profile-group" aria-labelledby="context-heading">
+                <div className="profile-group-heading">
+                  <h3 id="context-heading">当下语境</h3>
+                  <span>选填</span>
+                </div>
+
+                <div className="profile-work-grid">
+                  <div className="profile-field">
+                    <Label htmlFor="industry">所在行业</Label>
+                    <Input id="industry" placeholder="互联网、金融、教育…" value={form.industry} onChange={(e) => setForm({ ...form, industry: e.target.value })} />
+                  </div>
+                  <div className="profile-field">
+                    <Label htmlFor="job">当前职业</Label>
+                    <Input id="job" placeholder="产品、教师、设计师…" value={form.job} onChange={(e) => setForm({ ...form, job: e.target.value })} />
+                  </div>
+                </div>
+
+                <div className="profile-field">
+                  <Label>命理了解程度</Label>
+                  <div className="choice-row" role="group" aria-label="命理了解程度">
+                    {KNOWLEDGE_OPTIONS.map((option) => (
+                      <button
+                        key={option.value}
+                        type="button"
+                        className={`choice-chip ${form.knowledge === option.value ? "is-selected" : ""}`}
+                        aria-pressed={form.knowledge === option.value}
+                        onClick={() => setForm({ ...form, knowledge: option.value })}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </section>
+
+              <div className="birth-actions profile-actions">
                 <Button variant="ghost" onClick={back}><ChevronLeft className="w-4 h-4" /> 返回</Button>
                 <Button onClick={next}>下一步</Button>
               </div>
