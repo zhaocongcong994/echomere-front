@@ -1,12 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import RippleDistortion from './RippleDistortion';
 
 const Arrow = () => <span aria-hidden="true">↗</span>;
 
 export default function Home() {
   const [orbActive, setOrbActive] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsLoggedIn(Boolean(localStorage.getItem('echomere-token')));
+    }
+  }, []);
+
+  const enterHref = isLoggedIn ? '/chat' : '/login';
 
   return (
     <main className="hero-shell">
@@ -29,7 +38,7 @@ export default function Home() {
           <i aria-hidden="true" />
           <em>洄映</em>
         </a>
-        <a className="enter-link" href="/login">
+        <a className="enter-link" href={enterHref}>
           进入洄映 <Arrow />
         </a>
       </nav>
@@ -54,7 +63,7 @@ export default function Home() {
           aria-pressed={orbActive}
           onClick={() => {
             setOrbActive(true);
-            window.setTimeout(() => window.location.assign('/login'), 360);
+            window.setTimeout(() => window.location.assign(enterHref), 360);
           }}
         >
           <span className="orb-aura" aria-hidden="true" />

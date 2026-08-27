@@ -23,6 +23,7 @@ import {
   CreditCard,
   Home,
   ArrowUp,
+  LogOut,
 } from "lucide-react";
 
 const MODES = [
@@ -51,6 +52,7 @@ interface Message {
 interface Conversation {
   id: string;
   mode: string;
+  originalMode: string | null;
   title: string;
   updatedAt: string;
 }
@@ -64,7 +66,7 @@ const NAV_ITEMS = [
 ];
 
 function ChatContent() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -350,6 +352,9 @@ function ChatContent() {
           <Button variant="outline" className="w-full justify-start gap-2" onClick={() => router.push("/")}>
             <Home className="w-4 h-4" /> 返回首页
           </Button>
+          <Button variant="outline" className="w-full justify-start gap-2 text-stone-500" onClick={logout}>
+            <LogOut className="w-4 h-4" /> 退出登录
+          </Button>
           <Button variant="outline" className="w-full justify-start gap-2" onClick={startNewChat}>
             <MessageCircle className="w-4 h-4" /> 新对话
           </Button>
@@ -367,7 +372,15 @@ function ChatContent() {
             >
               <div className="truncate">{c.title}</div>
               <div className="text-xs text-stone-400">
-                {c.mode === "kanyun" ? "看运" : c.mode === "qingting" ? "倾听" : c.mode === "wenshi" ? "问事" : "随缘"}
+                {c.originalMode === "suiyuan"
+                  ? "随缘"
+                  : c.mode === "kanyun"
+                    ? "看运"
+                    : c.mode === "qingting"
+                      ? "倾听"
+                      : c.mode === "wenshi"
+                        ? "问事"
+                        : "随缘"}
               </div>
             </button>
           ))}
