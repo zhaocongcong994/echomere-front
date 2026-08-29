@@ -347,7 +347,7 @@ export default function DeepReportPage() {
                   window.setTimeout(() => {
                     setRegeneratingReportId(null);
                     generateReport(pendingRegenerate.profileId, 0);
-                  }, 2000);
+                  }, 1000);
                 }}
               >
                 {regeneratingReportId === pendingRegenerate.id ? (
