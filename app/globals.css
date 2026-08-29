@@ -1030,6 +1030,15 @@ input::placeholder, textarea::placeholder { color: rgba(236,233,228,.3); }
   color: rgba(242,240,236,.84) !important;
 }
 .chat-sidebar__button svg { width: 18px; height: 18px; stroke-width: 1.4; }
+.chat-sidebar__logout {
+  color: rgba(220,211,225,.66) !important;
+  border-color: rgba(173,127,198,.18) !important;
+}
+.chat-sidebar__logout:hover {
+  color: rgba(247,239,250,.94) !important;
+  border-color: rgba(187,132,219,.42) !important;
+  background: rgba(106,61,134,.16) !important;
+}
 .chat-sidebar__section-title { padding: 16px 24px 8px; letter-spacing: .06em; }
 .chat-sidebar__history { padding-inline: 24px; }
 .chat-history-item {

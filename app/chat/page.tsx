@@ -21,6 +21,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Trash2,
+  LogOut,
 } from "lucide-react";
 import { BottomDock, BrandLockup, EchoMark } from "@/components/echomere-chrome";
 
@@ -48,7 +49,7 @@ interface Conversation {
 }
 
 function ChatContent() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [mode, setMode] = useState("suiyuan");
@@ -394,6 +395,9 @@ function ChatContent() {
         <div className="chat-sidebar__actions">
           <Button variant="outline" className="chat-sidebar__button w-full justify-start" onClick={() => router.push("/")}>
             <Home className="w-4 h-4" /> <span className="chat-sidebar__label">返回首页</span>
+          </Button>
+          <Button variant="outline" className="chat-sidebar__button chat-sidebar__logout w-full justify-start" onClick={logout}>
+            <LogOut className="w-4 h-4" /> <span className="chat-sidebar__label">退出登录</span>
           </Button>
           <Button variant="outline" className="chat-sidebar__button w-full justify-start" onClick={startNewChat}>
             <MessageCircle className="w-4 h-4" /> <span className="chat-sidebar__label">新对话</span>
