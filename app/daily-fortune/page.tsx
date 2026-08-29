@@ -65,6 +65,7 @@ export default function DeepReportPage() {
       });
       if (res.ok) {
         setShowCreateDialog(false);
+        setPendingRegenerate(null);
         await fetchData();
       }
     } finally {
@@ -191,7 +192,7 @@ export default function DeepReportPage() {
                     {report.summary || "八字深度报告"}
                   </p>
                   <p className="text-xs text-stone-400 mt-3">
-                    生成时间：{new Date(report.createdAt).toLocaleString("zh-CN")}
+                    更新时间：{new Date(report.updatedAt).toLocaleString("zh-CN")}
                   </p>
                 </div>
 
