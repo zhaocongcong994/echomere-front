@@ -154,6 +154,11 @@ function ChatContent() {
     setMode("suiyuan");
   };
 
+  const handleLogout = () => {
+    logout();
+    window.location.replace("/login");
+  };
+
   const deleteConversation = async () => {
     if (!pendingDelete) return;
 
@@ -396,7 +401,7 @@ function ChatContent() {
           <Button variant="outline" className="chat-sidebar__button w-full justify-start" onClick={() => router.push("/")}>
             <Home className="w-4 h-4" /> <span className="chat-sidebar__label">返回首页</span>
           </Button>
-          <Button variant="outline" className="chat-sidebar__button chat-sidebar__logout w-full justify-start" onClick={logout}>
+          <Button variant="outline" className="chat-sidebar__button chat-sidebar__logout w-full justify-start" onClick={handleLogout}>
             <LogOut className="w-4 h-4" /> <span className="chat-sidebar__label">退出登录</span>
           </Button>
           <Button variant="outline" className="chat-sidebar__button w-full justify-start" onClick={startNewChat}>
