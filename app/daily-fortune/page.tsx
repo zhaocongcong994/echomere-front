@@ -129,7 +129,7 @@ export default function DeepReportPage() {
                   <div>
                     <h2 className="text-lg font-medium">{p.name || "未命名"}</h2>
                     <p className="text-xs text-stone-400 mt-1">
-                      {p.type === "self" ? "自己" : "他人"} · {p.gender === "male" ? "男" : p.gender === "female" ? "女" : "其他"}
+                      {p.gender === "male" ? "男" : p.gender === "female" ? "女" : "其他"}
                     </p>
                     <p className="text-xs text-stone-400 mt-1">
                       {new Date(p.birthDateTime).toLocaleString("zh-CN", {
@@ -237,28 +237,40 @@ export default function DeepReportPage() {
             <h2 className="text-lg font-medium mb-2">生成深度报告</h2>
             <p className="text-sm text-stone-500 mb-4">选择一个档案，生成大运流年与五行分析报告。</p>
             <div className="space-y-3">
-              {profiles.map((p) => (
-                <button
-                  key={p.id}
-                  className="w-full text-left bg-stone-50 hover:bg-stone-100 rounded-xl p-4 transition-colors"
-                  disabled={generatingProfileId === p.id}
-                  onClick={() => generateReport(p.id)}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="font-medium">{p.name || "未命名"}</div>
-                      <div className="text-xs text-stone-400 mt-1">
-                        {new Date(p.birthDateTime).toLocaleString("zh-CN")}
+              {profiles.map((p) => {
+                const hasReport = reports.some((r) => r.profileId === p.id);
+                return (
+                  <button
+                    key={p.id}
+                    className={`w-full text-left rounded-xl p-4 transition-colors ${
+                      hasReport
+                        ? "bg-stone-100 text-stone-400 cursor-not-allowed"
+                        : "bg-stone-50 hover:bg-stone-100"
+                    }`}
+                    disabled={hasReport || generatingProfileId === p.id}
+                    onClick={() => generateReport(p.id)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">{p.name || "未命名"}</div>
+                        <div className="text-xs text-stone-400 mt-1">
+                          {new Date(p.birthDateTime).toLocaleString("zh-CN")}
+                        </div>
+                        {hasReport && (
+                          <div className="text-xs text-stone-400 mt-1">已生成报告</div>
+                        )}
                       </div>
+                      {generatingProfileId === p.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-stone-400" />
+                      ) : hasReport ? (
+                        <span className="text-xs text-stone-400">不可选</span>
+                      ) : (
+                        <Plus className="w-4 h-4 text-stone-400" />
+                      )}
                     </div>
-                    {generatingProfileId === p.id ? (
-                      <Loader2 className="w-4 h-4 animate-spin text-stone-400" />
-                    ) : (
-                      <Plus className="w-4 h-4 text-stone-400" />
-                    )}
-                  </div>
-                </button>
-              ))}
+                  </button>
+                );
+              })}
             </div>
             <div className="mt-4 flex justify-end">
               <Button variant="ghost" onClick={() => setShowCreateDialog(false)}>

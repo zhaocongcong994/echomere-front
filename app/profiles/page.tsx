@@ -163,7 +163,7 @@ export default function ProfilesPage() {
                       {p.id === newProfileId && <span className="profile-card__new-label">刚刚创建</span>}
                     </div>
                     <p className="text-xs text-stone-400 mt-1">
-                      {p.type === "self" ? "自己" : "他人"} · {p.gender === "male" ? "男" : p.gender === "female" ? "女" : "其他"}
+                      {p.gender === "male" ? "男" : p.gender === "female" ? "女" : "其他"}
                     </p>
                   </div>
                   <div className="flex gap-2">

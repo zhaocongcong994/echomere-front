@@ -13,43 +13,27 @@ interface WuxingAnalysis {
   dayMasterElement: string;
   bodyStrength: string;
   xiYongShen: { xi: string[]; ji: string[] };
-  assessment: string;
+  overview: string;
+  dayMasterAnalysis: string;
+  detail: string;
 }
 
 interface DayunItem {
-  startYear?: number;
-  startAge?: number;
-  ganZhi?: string;
-  tenGod?: string;
-  diShi?: string;
-  liunianList?: Array<{
-    year: number;
-    age?: number;
-    ganZhi?: string;
-    tenGod?: string;
-    diShi?: string;
-  }>;
-}
-
-interface ChineseDayunItem {
-  起运年份?: number;
-  起运年龄?: number;
   干支?: string;
   十神?: string;
-  藏干?: Array<{ 天干?: string; 十神?: string }>;
+  起运年份?: number;
+  起运年龄?: number;
+  index?: number;
+  relation?: string;
+  rating?: string;
+  comprehensive?: string;
 }
 
 interface ReportContent {
   dayun?: {
-    direction?: string;
-    startAge?: number;
-    jiaoyunYear?: number;
-    dayun?: DayunItem[];
-    tongyun?: DayunItem[];
+    summary?: string;
+    startInfo?: { 起运年龄?: number; 起运详情?: string };
     list?: DayunItem[];
-    起运信息?: { 起运年龄?: number; 起运详情?: string };
-    大运列表?: ChineseDayunItem[];
-    童运列表?: ChineseDayunItem[];
   };
   wuxingAnalysis?: WuxingAnalysis;
 }
@@ -63,6 +47,15 @@ interface ReportDetail {
   createdAt: string;
   updatedAt: string;
   content?: ReportContent;
+}
+
+function renderMultiline(text?: string) {
+  if (!text) return null;
+  return text.split("\n").map((line, i) => (
+    <p key={i} className={line.startsWith("▸") || line.startsWith("  •") ? "pl-2" : ""}>
+      {line}
+    </p>
+  ));
 }
 
 export default function DeepReportDetailPage() {
@@ -108,8 +101,7 @@ export default function DeepReportDetailPage() {
   const content = report.content;
   const wuxing = content?.wuxingAnalysis;
   const dayun = content?.dayun;
-  const dayunList: Array<DayunItem | ChineseDayunItem> =
-    dayun?.list || dayun?.dayun || dayun?.大运列表 || [];
+  const dayunList = dayun?.list || [];
 
   return (
     <div className="min-h-screen product-page deep-report-detail-page bg-stone-50">
@@ -121,7 +113,7 @@ export default function DeepReportDetailPage() {
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-xl font-medium">{report.title || "八字深度报告"}</h1>
+            <h1 className="text-xl font-medium">深度报告</h1>
             <p className="text-sm text-stone-500">
               {report.profileName || "未命名"} · {new Date(report.createdAt).toLocaleString("zh-CN")}
             </p>
@@ -142,24 +134,33 @@ export default function DeepReportDetailPage() {
                 </div>
               ))}
             </div>
-            <div className="space-y-2 text-sm text-stone-600">
-              <p>
-                <span className="font-medium">日主五行：</span>
-                {wuxing.dayMasterElement}
-              </p>
-              <p>
-                <span className="font-medium">身强身弱：</span>
-                {wuxing.bodyStrength}
-              </p>
-              <p>
-                <span className="font-medium">喜用神：</span>
-                {wuxing.xiYongShen?.xi?.join("、") || "—"}
-              </p>
-              <p>
-                <span className="font-medium">忌神：</span>
-                {wuxing.xiYongShen?.ji?.join("、") || "—"}
-              </p>
-              <p className="leading-relaxed">{wuxing.assessment}</p>
+
+            <div className="space-y-4 text-sm text-stone-600">
+              <div className="p-4 rounded-xl bg-stone-50 border border-stone-100 space-y-2">
+                <p className="font-medium">命局概览</p>
+                <p className="leading-relaxed">{wuxing.overview}</p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-stone-50 border border-stone-100 space-y-2">
+                <p className="font-medium">日主分析</p>
+                <p className="leading-relaxed whitespace-pre-line">{wuxing.dayMasterAnalysis}</p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-stone-50 border border-stone-100 space-y-2">
+                <p className="font-medium">五行详解</p>
+                <div className="leading-relaxed space-y-1">{renderMultiline(wuxing.detail)}</div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-xl bg-stone-50 border border-stone-100">
+                  <p className="font-medium">喜用神</p>
+                  <p>{wuxing.xiYongShen?.xi?.join("、") || "—"}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-stone-50 border border-stone-100">
+                  <p className="font-medium">忌神</p>
+                  <p>{wuxing.xiYongShen?.ji?.join("、") || "—"}</p>
+                </div>
+              </div>
             </div>
           </section>
         )}
@@ -167,52 +168,46 @@ export default function DeepReportDetailPage() {
         {dayun && (
           <section className="bg-white rounded-2xl border border-stone-100 p-6 shadow-sm mb-6">
             <h2 className="text-lg font-medium mb-4">大运流年</h2>
-            <div className="flex flex-wrap gap-2 mb-4 text-sm text-stone-600">
-              {dayun.direction && <span>顺逆：{dayun.direction}</span>}
-              {dayun.startAge !== undefined && <span>起运年龄：{dayun.startAge} 岁</span>}
-              {dayun.jiaoyunYear && <span>交运年份：{dayun.jiaoyunYear}</span>}
-            </div>
+            <p className="text-sm text-stone-500 mb-4">{dayun.summary}</p>
+            {dayun.startInfo?.起运年龄 !== undefined && (
+              <p className="text-sm text-stone-500 mb-4">
+                起运年龄：{dayun.startInfo.起运年龄} 岁
+                {dayun.startInfo.起运详情 ? ` · ${dayun.startInfo.起运详情}` : ""}
+              </p>
+            )}
 
             {dayunList.length > 0 && (
               <div className="space-y-3">
-                {dayunList.map((item, index) => {
-                  const isChinese = "干支" in item;
-                  const ganZhi = isChinese ? item.干支 : item.ganZhi;
-                  const tenGod = isChinese ? item.十神 : item.tenGod;
-                  const startYear = isChinese ? item.起运年份 : item.startYear;
-                  const startAge = isChinese ? item.起运年龄 : item.startAge;
-                  return (
-                    <div
-                      key={index}
-                      className="p-4 rounded-xl bg-stone-50 border border-stone-100"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="font-medium text-base">
-                          {ganZhi || "—"}
-                          {tenGod && (
-                            <span className="text-sm text-stone-500 ml-2">{tenGod}</span>
-                          )}
-                        </div>
-                        <div className="text-xs text-stone-400">
-                          {startYear !== undefined && `${startYear} 年起`}
-                          {startAge !== undefined && ` · ${startAge} 岁`}
-                        </div>
+                {dayunList.map((item, index) => (
+                  <div
+                    key={index}
+                    className="p-4 rounded-xl bg-stone-50 border border-stone-100"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-medium text-base">
+                        第{item.index || index + 1}步大运 · {item.干支 || "—"}
+                        {item.十神 && (
+                          <span className="text-sm text-stone-500 ml-2">{item.十神}</span>
+                        )}
                       </div>
-                      {!isChinese && item.liunianList && item.liunianList.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          {item.liunianList.slice(0, 10).map((ly) => (
-                            <span
-                              key={ly.year}
-                              className="text-xs px-2 py-1 rounded bg-white border border-stone-100 text-stone-600"
-                            >
-                              {ly.year} {ly.ganZhi}
-                            </span>
-                          ))}
-                        </div>
-                      )}
+                      <div className="text-xs text-stone-400">
+                        {item.rating && <span className="mr-2">{item.rating}等运</span>}
+                        {item.起运年份 !== undefined && `${item.起运年份} 年起`}
+                        {item.起运年龄 !== undefined && ` · ${item.起运年龄} 岁`}
+                      </div>
                     </div>
-                  );
-                })}
+                    {item.relation && (
+                      <p className="text-sm text-stone-600 leading-relaxed mb-2">
+                        {item.relation}
+                      </p>
+                    )}
+                    {item.comprehensive && (
+                      <p className="text-sm text-stone-500 leading-relaxed">
+                        {item.comprehensive}
+                      </p>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </section>
