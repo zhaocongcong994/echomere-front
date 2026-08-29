@@ -120,7 +120,7 @@ export default function FortuneSystemsPage() {
         </section>
 
         {selectedSystem.available ? (
-          <Link className="fortune-system-cta" href="/daily-fortune">开启今日好运 <span aria-hidden="true">↗</span></Link>
+          <Link className="fortune-system-cta" href="/daily-fortune">生成深度报告 <span aria-hidden="true">↗</span></Link>
         ) : (
           <button className="fortune-system-cta is-disabled" type="button" disabled>{selectedSystem.name} · 即将推出</button>
         )}

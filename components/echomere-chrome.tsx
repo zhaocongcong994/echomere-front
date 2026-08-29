@@ -34,7 +34,7 @@ export function ProductHeader({ action }: { action?: React.ReactNode }) {
 const items = [
   { href: "/chat", label: "对话", icon: MessageCircle },
   { href: "/profiles", label: "档案", icon: UserRound },
-  { href: "/daily-fortune", label: "运势", icon: CalendarDays },
+  { href: "/daily-fortune", label: "深度报告", icon: CalendarDays },
   { href: "/fortune-systems", label: "占测", icon: Compass },
   { href: "/subscription", label: "订阅", icon: CreditCard },
 ];

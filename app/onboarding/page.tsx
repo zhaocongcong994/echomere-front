@@ -149,7 +149,7 @@ function OnboardingContent() {
             hour: birthDate.getHours(),
             minute: birthDate.getMinutes(),
             birthPlace,
-            timezone: matchedPlace?.timezone || current.timezone,
+            timezone: profile.timezone || matchedPlace?.timezone || current.timezone,
           }));
         }
       } finally {

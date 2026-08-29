@@ -25,12 +25,14 @@ import {
 } from "lucide-react";
 import { BottomDock, BrandLockup, EchoMark } from "@/components/echomere-chrome";
 
-const RECOMMENDED_QUESTIONS: Record<string, string[]> = {
-  suiyuan: ["天生适合做什么", "这个offer该不该接", "我的桃花运怎么样", "我的桃花运怎么样", "最近感觉不太顺"],
-  kanyun: ["分析一下我今年的年度运势", "我的桃花运怎么样", "今年适合换工作吗", "我的财运如何"],
-  qingting: ["最近压力好大", "感觉人生没有方向", "和家里人关系很紧张", "最近总是睡不好"],
-  wenshi: ["这个 offer 该不该接", "要不要离开这份工作", "今年适合创业吗", "和 TA 合适吗"],
-};
+const RECOMMENDED_QUESTIONS = [
+  "天生适合做什么",
+  "分析一下我今年的年度运势",
+  "最近压力好大",
+  "这个 offer 该不该接",
+  "我的桃花运怎么样",
+  "今年适合换工作吗",
+];
 
 interface Message {
   id: string;
@@ -420,9 +422,6 @@ function ChatContent() {
                 }`}
               >
                 <div className="truncate">{c.title}</div>
-                <div className="text-xs text-stone-400">
-                  {c.mode === "kanyun" ? "看运" : c.mode === "qingting" ? "倾听" : c.mode === "wenshi" ? "问事" : "随缘"}
-                </div>
               </button>
               <button
                 type="button"
@@ -547,7 +546,7 @@ function ChatContent() {
               </div>
 
               <div className="chat-empty-suggestions flex flex-wrap justify-center gap-2 max-w-xl">
-                {(RECOMMENDED_QUESTIONS[mode as keyof typeof RECOMMENDED_QUESTIONS] || []).map((q, index) => (
+                {RECOMMENDED_QUESTIONS.map((q, index) => (
                   <button
                     key={`${q}-${index}`}
                     onClick={() => sendMessage(q)}

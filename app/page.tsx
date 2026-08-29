@@ -3,10 +3,12 @@
 import { useState } from 'react';
 import RippleDistortion from './RippleDistortion';
 import { BrandLockup } from '@/components/echomere-chrome';
+import { useAuth } from '@/components/auth-provider';
 
 export default function Home() {
   const [orbActive, setOrbActive] = useState(false);
   const [visualReady, setVisualReady] = useState(false);
+  const { user } = useAuth();
 
   return (
     <main className={`hero-shell${visualReady ? ' is-visual-ready' : ''}`}>
@@ -44,7 +46,7 @@ export default function Home() {
           aria-pressed={orbActive}
           onClick={() => {
             setOrbActive(true);
-            window.setTimeout(() => window.location.assign('/login'), 360);
+            window.setTimeout(() => window.location.assign(user ? '/chat' : '/login'), 360);
           }}
         >
           <span className="orb-aura" aria-hidden="true" />
