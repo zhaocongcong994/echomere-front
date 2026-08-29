@@ -109,16 +109,47 @@ function demoResponse(path: string, init: RequestInit): Response {
       return jsonResponse(demoProfiles[profileIndex]);
     }
   }
-  if (path === "/daily-fortune") return jsonResponse({
-    date: new Date().toISOString().slice(0, 10),
-    profile: { name: "妮娜", bazi: demoBazi },
-    today: { yearGanZhi: "丙午", monthGanZhi: "丙申", dayGanZhi: "壬申", dayShiShen: "食神", dayWuXing: "水" },
-    year: { ganZhi: "丙午", shiShen: "七杀", naYin: "天河水" },
-  });
+  if (path === "/daily-fortune") return jsonResponse([]);
+  const reportDetailMatch = path.match(/^\/reports\/([^/]+)$/);
+  if (path === "/reports" && method === "GET") return jsonResponse([]);
+  if (path === "/reports" && method === "POST") {
+    return jsonResponse({
+      id: "demo-report",
+      profileId: "demo-profile",
+      profileName: "妮娜",
+      title: "八字深度报告",
+      summary: "",
+      status: "pending",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+  }
+  if (reportDetailMatch) {
+    return jsonResponse({
+      id: reportDetailMatch[1],
+      profileId: "demo-profile",
+      profileName: "妮娜",
+      title: "八字深度报告",
+      status: "completed",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      content: {
+        dayun: demoBazi.dayun,
+        wuxingAnalysis: {
+          scores: demoBazi.wuxing,
+          ranking: Object.entries(demoBazi.wuxing).map(([element, score]) => ({ element, score })).sort((a, b) => b.score - a.score),
+          dayMasterElement: demoBazi.dayMaster.wuxing,
+          bodyStrength: demoBazi.bodyStrength,
+          xiYongShen: demoBazi.xiYongShen,
+          assessment: "日主庚金，身强，五行金旺木弱。",
+        },
+      },
+    });
+  }
   if (path === "/subscription") return jsonResponse({
     currentPlan: "free", used: 0, limit: null,
     plans: [
-      { id: "free", name: "体验版", price: 0, period: "月", features: ["每日运势", "八字星云图", "看运/倾听/问事 无限次测试"], cta: "当前方案", popular: false },
+      { id: "free", name: "体验版", price: 0, period: "月", features: ["八字深度报告", "八字星云图", "看运/倾听/问事 无限次测试"], cta: "当前方案", popular: false },
       { id: "light", name: "轻量版", price: 2900, period: "月", features: ["每月 30 次深度解读", "优先响应", "历史对话导出"], cta: "选择轻量版", popular: false },
       { id: "pro", name: "专业版", price: 9900, period: "月", features: ["每月 100 次深度解读", "紫微斗数（敬请期待）", "真人 1v1 折扣"], cta: "选择专业版", popular: true },
       { id: "unlimited", name: "无限版", price: 29900, period: "月", features: ["无限次深度解读", "全部命理体系", "优先真人 1v1"], cta: "选择无限版", popular: false },

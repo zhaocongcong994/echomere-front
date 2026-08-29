@@ -14,7 +14,7 @@ const pages = [
   ["命盘校准", "/nebula/confirm"],
   ["命盘详情", "/nebula/chart"],
   ["命运档案", "/profiles"],
-  ["今日运势", "/daily-fortune"],
+  ["深度报告", "/daily-fortune"],
   ["订阅方案", "/subscription"],
   ["设置", "/settings"],
   ["博客", "/blog"],
