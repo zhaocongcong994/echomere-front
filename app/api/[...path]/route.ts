@@ -30,6 +30,7 @@ async function proxy(request: Request, { params }: RouteParams) {
     headers,
     body: hasBody ? await request.arrayBuffer() : undefined,
     redirect: "manual",
+    signal: request.signal,
   });
 
   const responseHeaders = new Headers(upstream.headers);

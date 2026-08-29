@@ -3,6 +3,12 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { apiFetch } from "@/lib/api";
+import {
+  describeChatHttpError,
+  describeStreamError,
+  JsonSSEParser,
+  type ParsedSSEEvent,
+} from "@/lib/chat-stream";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +52,39 @@ interface Message {
   toolCalls?: string;
   thinkingSummary?: string;
   routeReason?: string;
+  action?: { label: string; href: string };
+}
+
+interface ToolRunEvent {
+  type: "tool_started" | "tool_completed";
+  toolRunId: string;
+  toolName?: string;
+  displayName?: string;
+  summary?: string;
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object"
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function normalizeToolEvent(data: Record<string, unknown>): ToolRunEvent | null {
+  if (
+    (data.type !== "tool_started" && data.type !== "tool_completed") ||
+    typeof data.toolRunId !== "string"
+  ) {
+    return null;
+  }
+  return {
+    type: data.type,
+    toolRunId: data.toolRunId,
+    ...(typeof data.toolName === "string" ? { toolName: data.toolName } : {}),
+    ...(typeof data.displayName === "string"
+      ? { displayName: data.displayName }
+      : {}),
+    ...(typeof data.summary === "string" ? { summary: data.summary } : {}),
+  };
 }
 
 interface Conversation {
@@ -77,6 +116,7 @@ function ChatContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedThinking, setExpandedThinking] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const activeRequestRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) router.push("/login");
@@ -89,6 +129,8 @@ function ChatContent() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  useEffect(() => () => activeRequestRef.current?.abort(), []);
 
   useEffect(() => {
     const q = searchParams.get("question");
@@ -133,10 +175,14 @@ function ChatContent() {
   };
 
   const startNewChat = () => {
+    activeRequestRef.current?.abort();
+    activeRequestRef.current = null;
     setCurrentConversationId(null);
     setMessages([]);
     setMode("suiyuan");
   };
+
+  const stopStreaming = () => activeRequestRef.current?.abort();
 
   const extractRouteReason = (): string | undefined => {
     try {
@@ -158,37 +204,49 @@ function ChatContent() {
     };
     setMessages((prev) => [...prev, userMessage]);
 
+    const controller = new AbortController();
+    activeRequestRef.current = controller;
+    const clientRequestId = globalThis.crypto.randomUUID();
+    let assistantMessage: Message | null = null;
+
     try {
       const res = await apiFetch("/chat/stream", {
         method: "POST",
+        headers: { "X-Request-Id": clientRequestId },
+        signal: controller.signal,
         body: JSON.stringify({
           mode,
           message: text,
           conversationId: currentConversationId,
+          clientRequestId,
         }),
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "请求失败" }));
+        const err = (await res.json().catch(() => ({ error: "请求失败" }))) as Record<
+          string,
+          unknown
+        >;
         setMessages((prev) => [
           ...prev,
           {
             id: `err-${Date.now()}`,
             role: "assistant",
-            content:
-              err.error === "NO_PROFILE"
-                ? "看运需要先建立命盘档案，请先去设置页创建。"
-                : `请求失败：${err.error || "未知错误"}`,
+            content: describeChatHttpError(res.status, err),
+            ...(err.error === "NO_PROFILE"
+              ? { action: { label: "前往命运档案", href: "/profiles" } }
+              : {}),
           },
         ]);
-        setLoading(false);
         return;
       }
 
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
-      let buffer = "";
-      const assistantMessage: Message = {
+      const parser = new JsonSSEParser();
+      const toolEvents: ToolRunEvent[] = [];
+      let terminalSeen = false;
+      assistantMessage = {
         id: `assistant-${Date.now()}`,
         role: "assistant",
         content: "",
@@ -197,51 +255,151 @@ function ChatContent() {
       setMessages((prev) => [...prev, assistantMessage]);
 
       if (!reader) {
-        setLoading(false);
-        return;
+        throw new Error("Streaming response body is unavailable.");
       }
+
+      const syncAssistant = () => {
+        if (!assistantMessage) return;
+        const snapshot = { ...assistantMessage };
+        setMessages((prev) =>
+          prev.map((message) => (message.id === snapshot.id ? snapshot : message))
+        );
+      };
+
+      const handleEvent = (parsedEvent: ParsedSSEEvent) => {
+        if (!assistantMessage) return;
+        const data = asRecord(parsedEvent.data);
+
+        if (parsedEvent.event === "meta") {
+          if (typeof data.conversationId === "string") {
+            setCurrentConversationId(data.conversationId);
+          }
+          assistantMessage.routeReason =
+            typeof data.routeReason === "string" ? data.routeReason : undefined;
+          syncAssistant();
+          void fetchConversations();
+          return;
+        }
+
+        if (parsedEvent.event === "tool") {
+          const toolEvent = normalizeToolEvent(data);
+          if (!toolEvent) return;
+          const existingIndex = toolEvents.findIndex(
+            (event) => event.toolRunId === toolEvent.toolRunId
+          );
+          if (existingIndex >= 0) toolEvents[existingIndex] = toolEvent;
+          else toolEvents.push(toolEvent);
+          assistantMessage.toolCalls = JSON.stringify([
+            { name: "Agent执行", result: { events: toolEvents } },
+          ]);
+          syncAssistant();
+          return;
+        }
+
+        if (parsedEvent.event === "chunk") {
+          assistantMessage.content +=
+            typeof data.content === "string" ? data.content : "";
+          syncAssistant();
+          return;
+        }
+
+        if (parsedEvent.event === "waiting_input") {
+          terminalSeen = true;
+          assistantMessage.thinkingSummary = "需要补充信息后继续";
+          assistantMessage.content =
+            typeof data.message === "string"
+              ? data.message
+              : describeStreamError(data);
+          const requiredFields = Array.isArray(data.requiredFields)
+            ? data.requiredFields
+            : [];
+          if (requiredFields.includes("profileId")) {
+            assistantMessage.action = {
+              label: "选择或创建命运档案",
+              href: "/profiles",
+            };
+          }
+          syncAssistant();
+          return;
+        }
+
+        if (parsedEvent.event === "error") {
+          terminalSeen = true;
+          const errorMessage = describeStreamError(data);
+          assistantMessage.thinkingSummary = "本次运行未完成";
+          assistantMessage.content = assistantMessage.content
+            ? `${assistantMessage.content}\n\n${errorMessage}`
+            : errorMessage;
+          syncAssistant();
+          return;
+        }
+
+        if (parsedEvent.event === "done") {
+          terminalSeen = true;
+          void fetchConversations();
+        }
+      };
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-
-        const blocks = buffer.split("\n\n");
-        buffer = blocks.pop() || "";
-
-        for (const block of blocks) {
-          const eventLine = block.split("\n").find((l) => l.startsWith("event:"));
-          const dataLine = block.split("\n").find((l) => l.startsWith("data:"));
-          if (!eventLine || !dataLine) continue;
-
-          const event = eventLine.slice(6).trim();
-          const data = JSON.parse(dataLine.slice(5));
-
-          if (event === "meta") {
-            setCurrentConversationId(data.conversationId);
-            assistantMessage.toolCalls = JSON.stringify(data.toolCalls);
-            assistantMessage.routeReason = data.routeReason;
-            fetchConversations();
-          }
-
-          if (event === "chunk") {
-            assistantMessage.content += data.content || "";
-            setMessages((prev) =>
-              prev.map((m) => (m.id === assistantMessage.id ? { ...assistantMessage } : m))
-            );
-          }
+        for (const event of parser.push(decoder.decode(value, { stream: true }))) {
+          handleEvent(event);
         }
       }
-    } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `err-${Date.now()}`,
-          role: "assistant",
-          content: "网络异常，请重试。",
-        },
-      ]);
+      for (const event of parser.finish(decoder.decode())) {
+        handleEvent(event);
+      }
+      if (!terminalSeen && assistantMessage) {
+        assistantMessage.thinkingSummary = "回答意外中断";
+        assistantMessage.content = assistantMessage.content
+          ? `${assistantMessage.content}\n\n回答意外中断，请重新发送。`
+          : "回答意外中断，请重新发送。";
+        syncAssistant();
+      }
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        if (assistantMessage) {
+          const assistantId = assistantMessage.id;
+          setMessages((prev) =>
+            prev.map((message) =>
+              message.id === assistantId
+                ? {
+                    ...message,
+                    content: message.content || "本次回答已停止。",
+                    thinkingSummary: "已停止",
+                  }
+                : message
+            )
+          );
+        }
+        return;
+      }
+      if (assistantMessage) {
+        const assistantId = assistantMessage.id;
+        setMessages((prev) =>
+          prev.map((message) =>
+            message.id === assistantId
+              ? {
+                  ...message,
+                  content: message.content || "网络异常，请重试。",
+                  thinkingSummary: "连接已中断",
+                }
+              : message
+          )
+        );
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `err-${Date.now()}`,
+            role: "assistant",
+            content: "网络异常，请重试。",
+          },
+        ]);
+      }
     } finally {
+      if (activeRequestRef.current === controller) activeRequestRef.current = null;
       setLoading(false);
     }
   }
@@ -255,9 +413,9 @@ function ChatContent() {
   }
 
   const renderToolCalls = (msg: Message) => {
-    if (!msg.toolCalls) return null;
+    if (!msg.toolCalls && !msg.routeReason) return null;
     try {
-      const calls = JSON.parse(msg.toolCalls) as Array<{
+      const calls = (msg.toolCalls ? JSON.parse(msg.toolCalls) : []) as Array<{
         name: string;
         parameters?: unknown;
         result?: {
@@ -271,11 +429,19 @@ function ChatContent() {
           changedNumber?: number;
           changingYaos?: number[];
           yaos?: Array<{ index: number; type: string; yin: boolean; changing: boolean }>;
+          events?: ToolRunEvent[];
         };
       }>;
 
       const kanyunCalls = calls.filter((c) => c.name === "查询命盘" || c.name === "查询时间流");
       const hexagramCall = calls.find((c) => c.name === "起卦服务");
+      const agentTools = calls
+        .flatMap((call) => call.result?.events ?? [])
+        .filter(
+          (event, index, events) =>
+            events.findLastIndex((candidate) => candidate.toolRunId === event.toolRunId) ===
+            index
+        );
 
       return (
         <div className="space-y-2 my-3">
@@ -284,6 +450,25 @@ function ChatContent() {
               {msg.routeReason}
             </div>
           )}
+
+          {agentTools.map((tool) => (
+            <div
+              key={tool.toolRunId}
+              className="bg-stone-50 border border-stone-100 rounded-lg px-4 py-2 text-sm"
+            >
+              <div className="flex items-center justify-between gap-4">
+                <span className="font-medium text-stone-700">
+                  {tool.displayName || tool.toolName || "Agent 工具"}
+                </span>
+                <span className="text-xs text-stone-400">
+                  {tool.type === "tool_completed" ? "已完成" : "执行中"}
+                </span>
+              </div>
+              {tool.summary && (
+                <div className="text-stone-500 text-xs mt-1">{tool.summary}</div>
+              )}
+            </div>
+          ))}
 
           {kanyunCalls.map((call, i) => (
             <div key={i} className="bg-stone-50 border border-stone-100 rounded-lg px-4 py-2 text-sm">
@@ -432,10 +617,15 @@ function ChatContent() {
                   <Button
                     size="icon"
                     className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full chat-composer-send"
-                    onClick={() => sendMessage(input)}
-                    disabled={loading || !input.trim()}
+                    onClick={() => (loading ? stopStreaming() : sendMessage(input))}
+                    disabled={!loading && !input.trim()}
+                    aria-label={loading ? "停止回答" : "发送消息"}
                   >
-                    <ArrowUp className="w-[17px] h-[17px]" strokeWidth={1.45} />
+                    {loading ? (
+                      <X className="w-[17px] h-[17px]" strokeWidth={1.45} />
+                    ) : (
+                      <ArrowUp className="w-[17px] h-[17px]" strokeWidth={1.45} />
+                    )}
                   </Button>
                 </div>
               </div>
@@ -491,6 +681,17 @@ function ChatContent() {
 
                     <div className="whitespace-pre-wrap">{msg.content}</div>
 
+                    {msg.role === "assistant" && msg.action && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-3"
+                        onClick={() => router.push(msg.action!.href)}
+                      >
+                        {msg.action.label}
+                      </Button>
+                    )}
+
                     {msg.role === "assistant" && msg.content && (
                       <div className="flex items-center gap-2 mt-3 pt-2 border-t border-stone-200/60">
                         <button className="text-stone-400 hover:text-stone-600">
@@ -534,10 +735,15 @@ function ChatContent() {
                   <Button
                     size="icon"
                     className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full chat-composer-send"
-                    onClick={() => sendMessage(input)}
-                    disabled={loading || !input.trim()}
+                    onClick={() => (loading ? stopStreaming() : sendMessage(input))}
+                    disabled={!loading && !input.trim()}
+                    aria-label={loading ? "停止回答" : "发送消息"}
                   >
-                    <ArrowUp className="w-[17px] h-[17px]" strokeWidth={1.45} />
+                    {loading ? (
+                      <X className="w-[17px] h-[17px]" strokeWidth={1.45} />
+                    ) : (
+                      <ArrowUp className="w-[17px] h-[17px]" strokeWidth={1.45} />
+                    )}
                   </Button>
                 </div>
               </div>
