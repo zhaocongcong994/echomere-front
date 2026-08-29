@@ -120,98 +120,100 @@ export default function DeepReportDetailPage() {
           </div>
         </div>
 
-        {wuxing && (
-          <section className="bg-white rounded-2xl border border-stone-100 p-6 shadow-sm mb-6">
-            <h2 className="text-lg font-medium mb-4">五行分析</h2>
-            <div className="grid grid-cols-5 gap-3 mb-4">
-              {wuxing.ranking?.map((item) => (
-                <div
-                  key={item.element}
-                  className="text-center p-3 rounded-xl bg-stone-50 border border-stone-100"
-                >
-                  <div className="text-2xl font-medium">{item.element}</div>
-                  <div className="text-xs text-stone-500 mt-1">{item.score}</div>
-                </div>
-              ))}
-            </div>
-
-            <div className="space-y-4 text-sm text-stone-600">
-              <div className="p-4 rounded-xl bg-stone-50 border border-stone-100 space-y-2">
-                <p className="font-medium">命局概览</p>
-                <p className="leading-relaxed">{wuxing.overview}</p>
-              </div>
-
-              <div className="p-4 rounded-xl bg-stone-50 border border-stone-100 space-y-2">
-                <p className="font-medium">日主分析</p>
-                <p className="leading-relaxed whitespace-pre-line">{wuxing.dayMasterAnalysis}</p>
-              </div>
-
-              <div className="p-4 rounded-xl bg-stone-50 border border-stone-100 space-y-2">
-                <p className="font-medium">五行详解</p>
-                <div className="leading-relaxed space-y-1">{renderMultiline(wuxing.detail)}</div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 rounded-xl bg-stone-50 border border-stone-100">
-                  <p className="font-medium">喜用神</p>
-                  <p>{wuxing.xiYongShen?.xi?.join("、") || "—"}</p>
-                </div>
-                <div className="p-3 rounded-xl bg-stone-50 border border-stone-100">
-                  <p className="font-medium">忌神</p>
-                  <p>{wuxing.xiYongShen?.ji?.join("、") || "—"}</p>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {dayun && (
-          <section className="bg-white rounded-2xl border border-stone-100 p-6 shadow-sm mb-6">
-            <h2 className="text-lg font-medium mb-4">大运流年</h2>
-            <p className="text-sm text-stone-500 mb-4">{dayun.summary}</p>
-            {dayun.startInfo?.起运年龄 !== undefined && (
-              <p className="text-sm text-stone-500 mb-4">
-                起运年龄：{dayun.startInfo.起运年龄} 岁
-                {dayun.startInfo.起运详情 ? ` · ${dayun.startInfo.起运详情}` : ""}
-              </p>
-            )}
-
-            {dayunList.length > 0 && (
-              <div className="space-y-3">
-                {dayunList.map((item, index) => (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+          {wuxing && (
+            <section className="bg-white rounded-2xl border border-stone-100 p-6 shadow-sm">
+              <h2 className="text-lg font-medium mb-4">五行分析</h2>
+              <div className="grid grid-cols-5 gap-3 mb-4">
+                {wuxing.ranking?.map((item) => (
                   <div
-                    key={index}
-                    className="p-4 rounded-xl bg-stone-50 border border-stone-100"
+                    key={item.element}
+                    className="text-center p-3 rounded-xl bg-stone-50 border border-stone-100"
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="font-medium text-base">
-                        第{item.index || index + 1}步大运 · {item.干支 || "—"}
-                        {item.十神 && (
-                          <span className="text-sm text-stone-500 ml-2">{item.十神}</span>
-                        )}
-                      </div>
-                      <div className="text-xs text-stone-400">
-                        {item.rating && <span className="mr-2">{item.rating}等运</span>}
-                        {item.起运年份 !== undefined && `${item.起运年份} 年起`}
-                        {item.起运年龄 !== undefined && ` · ${item.起运年龄} 岁`}
-                      </div>
-                    </div>
-                    {item.relation && (
-                      <p className="text-sm text-stone-600 leading-relaxed mb-2">
-                        {item.relation}
-                      </p>
-                    )}
-                    {item.comprehensive && (
-                      <p className="text-sm text-stone-500 leading-relaxed">
-                        {item.comprehensive}
-                      </p>
-                    )}
+                    <div className="text-2xl font-medium">{item.element}</div>
+                    <div className="text-xs text-stone-500 mt-1">{item.score}</div>
                   </div>
                 ))}
               </div>
-            )}
-          </section>
-        )}
+
+              <div className="space-y-4 text-sm text-stone-600">
+                <div className="p-4 rounded-xl bg-stone-50 border border-stone-100 space-y-2">
+                  <p className="font-medium">命局概览</p>
+                  <p className="leading-relaxed">{wuxing.overview}</p>
+                </div>
+
+                <div className="p-4 rounded-xl bg-stone-50 border border-stone-100 space-y-2">
+                  <p className="font-medium">日主分析</p>
+                  <p className="leading-relaxed whitespace-pre-line">{wuxing.dayMasterAnalysis}</p>
+                </div>
+
+                <div className="p-4 rounded-xl bg-stone-50 border border-stone-100 space-y-2">
+                  <p className="font-medium">五行详解</p>
+                  <div className="leading-relaxed space-y-1">{renderMultiline(wuxing.detail)}</div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 rounded-xl bg-stone-50 border border-stone-100">
+                    <p className="font-medium">喜用神</p>
+                    <p>{wuxing.xiYongShen?.xi?.join("、") || "—"}</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-stone-50 border border-stone-100">
+                    <p className="font-medium">忌神</p>
+                    <p>{wuxing.xiYongShen?.ji?.join("、") || "—"}</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {dayun && (
+            <section className="bg-white rounded-2xl border border-stone-100 p-6 shadow-sm">
+              <h2 className="text-lg font-medium mb-4">大运流年</h2>
+              <p className="text-sm text-stone-500 mb-4">{dayun.summary}</p>
+              {dayun.startInfo?.起运年龄 !== undefined && (
+                <p className="text-sm text-stone-500 mb-4">
+                  起运年龄：{dayun.startInfo.起运年龄} 岁
+                  {dayun.startInfo.起运详情 ? ` · ${dayun.startInfo.起运详情}` : ""}
+                </p>
+              )}
+
+              {dayunList.length > 0 && (
+                <div className="space-y-3">
+                  {dayunList.map((item, index) => (
+                    <div
+                      key={index}
+                      className="p-4 rounded-xl bg-stone-50 border border-stone-100"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-medium text-base">
+                          第{item.index || index + 1}步大运 · {item.干支 || "—"}
+                          {item.十神 && (
+                            <span className="text-sm text-stone-500 ml-2">{item.十神}</span>
+                          )}
+                        </div>
+                        <div className="text-xs text-stone-400">
+                          {item.rating && <span className="mr-2">{item.rating}等运</span>}
+                          {item.起运年份 !== undefined && `${item.起运年份} 年起`}
+                          {item.起运年龄 !== undefined && ` · ${item.起运年龄} 岁`}
+                        </div>
+                      </div>
+                      {item.relation && (
+                        <p className="text-sm text-stone-600 leading-relaxed mb-2">
+                          {item.relation}
+                        </p>
+                      )}
+                      {item.comprehensive && (
+                        <p className="text-sm text-stone-500 leading-relaxed">
+                          {item.comprehensive}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+        </div>
 
         {!content && (
           <div className="bg-white rounded-2xl border border-stone-100 p-6 shadow-sm text-center">

@@ -58,13 +58,19 @@ export default function DeepReportPage() {
     return () => window.clearInterval(interval);
   }, []);
 
-  const generateReport = async (profileId: string) => {
+  const generateReport = async (profileId: string, minDelayMs = 1000) => {
     setGeneratingProfileId(profileId);
     try {
-      const res = await apiFetch("/reports", {
-        method: "POST",
-        body: JSON.stringify({ profileId }),
-      });
+      const tasks: [Promise<Response>, Promise<unknown>?] = [
+        apiFetch("/reports", {
+          method: "POST",
+          body: JSON.stringify({ profileId }),
+        }),
+      ];
+      if (minDelayMs > 0) {
+        tasks.push(new Promise((resolve) => window.setTimeout(resolve, minDelayMs)));
+      }
+      const [res] = await Promise.all(tasks);
       if (res.ok) {
         setShowCreateDialog(false);
         setSelectedProfileId(null);
@@ -156,7 +162,7 @@ export default function DeepReportPage() {
                     ) : (
                       <FileText className="w-4 h-4" />
                     )}
-                    确认生成报告
+                    {generatingProfileId === p.id ? "生成中" : "确认生成报告"}
                   </Button>
                 </div>
               ))}
@@ -212,7 +218,7 @@ export default function DeepReportPage() {
                     ) : (
                       <RotateCw className="w-4 h-4" />
                     )}
-                    重新生成
+                    {regeneratingReportId === report.id || generatingProfileId === report.profileId ? "生成中" : "重新生成"}
                   </Button>
                   <Button
                     variant="ghost"
@@ -308,9 +314,8 @@ export default function DeepReportPage() {
               >
                 {generatingProfileId ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  "确认"
-                )}
+                ) : null}
+                {generatingProfileId ? "生成中" : "确认"}
               </Button>
             </div>
           </div>
@@ -341,7 +346,7 @@ export default function DeepReportPage() {
                   setRegeneratingReportId(pendingRegenerate.id);
                   window.setTimeout(() => {
                     setRegeneratingReportId(null);
-                    generateReport(pendingRegenerate.profileId);
+                    generateReport(pendingRegenerate.profileId, 0);
                   }, 2000);
                 }}
               >

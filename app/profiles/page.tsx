@@ -137,7 +137,17 @@ export default function ProfilesPage() {
       <main className="max-w-3xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-xl font-medium">我的档案</h1>
-          <Button size="sm" onClick={() => router.push("/onboarding?profileMode=1&callbackUrl=/profiles")}>
+          <Button
+            size="sm"
+            className={profiles.length >= 10 ? "opacity-50 cursor-not-allowed" : ""}
+            onClick={() => {
+              if (profiles.length >= 10) {
+                window.alert("每个账号最多可创建 10 份档案");
+                return;
+              }
+              router.push("/onboarding?profileMode=1&callbackUrl=/profiles");
+            }}
+          >
             <Plus className="w-4 h-4" /> 新增档案
           </Button>
         </div>
