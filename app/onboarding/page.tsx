@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,14 +12,49 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, ChevronLeft, Sparkles } from "lucide-react";
+import { Loader2, ChevronLeft } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { BottomDock, ProductHeader } from "@/components/echomere-chrome";
 
 const YEARS = Array.from({ length: 100 }, (_, i) => 2026 - i);
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
 const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MINUTES = Array.from({ length: 60 }, (_, i) => i);
+const BIRTH_PLACE_OPTIONS = [
+  { value: "中国 · 北京市", timezone: "UTC+08:00" },
+  { value: "中国 · 上海市", timezone: "UTC+08:00" },
+  { value: "中国 · 广州市", timezone: "UTC+08:00" },
+  { value: "中国 · 深圳市", timezone: "UTC+08:00" },
+  { value: "中国 · 成都市", timezone: "UTC+08:00" },
+  { value: "中国 · 重庆市", timezone: "UTC+08:00" },
+  { value: "中国 · 杭州市", timezone: "UTC+08:00" },
+  { value: "中国 · 武汉市", timezone: "UTC+08:00" },
+  { value: "中国 · 西安市", timezone: "UTC+08:00" },
+  { value: "中国香港 · 香港", timezone: "UTC+08:00" },
+  { value: "日本 · 东京", timezone: "UTC+09:00" },
+  { value: "新加坡 · 新加坡", timezone: "UTC+08:00" },
+  { value: "英国 · 伦敦", timezone: "UTC+00:00" },
+  { value: "美国 · 纽约", timezone: "UTC-05:00" },
+  { value: "美国 · 洛杉矶", timezone: "UTC-08:00" },
+];
+const TIMEZONE_OPTIONS = [
+  "UTC-08:00",
+  "UTC-07:00",
+  "UTC-06:00",
+  "UTC-05:00",
+  "UTC-04:00",
+  "UTC+00:00",
+  "UTC+01:00",
+  "UTC+02:00",
+  "UTC+03:00",
+  "UTC+05:30",
+  "UTC+07:00",
+  "UTC+08:00",
+  "UTC+09:00",
+  "UTC+10:00",
+  "UTC+12:00",
+];
 const GENDER_OPTIONS = [
   { value: "male", label: "男" },
   { value: "female", label: "女" },
@@ -32,6 +67,8 @@ const KNOWLEDGE_OPTIONS = [
 ];
 
 interface BaziPreview {
+  schemaVersion?: number;
+  engine?: { name: string; version: string };
   year: string;
   month: string;
   day: string;
@@ -39,25 +76,92 @@ interface BaziPreview {
   dayMaster: { gan: string; zhi: string; wuxing: string };
   genderLabel: string;
   wuxing: Record<string, number>;
+  chart?: {
+    trueSolarTimeInfo?: {
+      clockTime: string;
+      trueSolarTime: string;
+      longitude: number;
+      correctionMinutes: number;
+    };
+    relations?: Array<{ type: string; description: string }>;
+  };
+  dayun?: {
+    list?: Array<{
+      startYear: number;
+      startAge: number;
+      ganZhi: string;
+      tenGod: string;
+      diShi: string;
+    }>;
+  };
 }
 
 function OnboardingContent() {
   const router = useRouter();
-  const [step, setStep] = useState(1);
+  const searchParams = useSearchParams();
+  const profileMode = searchParams.get("profileMode") === "1";
+  const editingProfileId = searchParams.get("profileId");
+  const callbackUrl = searchParams.get("callbackUrl") || (profileMode ? "/profiles" : "/chat");
+  const [step, setStep] = useState(2);
   const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(Boolean(editingProfileId));
   const [form, setForm] = useState({
+    name: "妮娜",
     year: 1990,
     month: 1,
     day: 15,
     hour: 12,
     minute: 30,
-    gender: "male",
+    calendarType: "solar" as "solar" | "lunar",
+    isLeapMonth: false,
+    birthPlace: "中国 · 上海市",
+    timezone: "UTC+08:00",
+    longitude: "",
+    gender: "female",
     relationship: "",
     industry: "",
     job: "",
     knowledge: "",
   });
   const [preview, setPreview] = useState<BaziPreview | null>(null);
+
+  useEffect(() => {
+    if (!editingProfileId) return;
+
+    let active = true;
+    const loadProfile = async () => {
+      try {
+        const res = await apiFetch(`/profiles/${editingProfileId}`);
+        if (!res.ok) return;
+        const profile = await res.json();
+        const birthDate = new Date(profile.birthDateTime);
+        const birthPlace = profile.birthLocation || "";
+        const matchedPlace = BIRTH_PLACE_OPTIONS.find((item) => item.value === birthPlace);
+
+        if (active) {
+          setForm((current) => ({
+            ...current,
+            name: profile.name || "",
+            gender: profile.gender || current.gender,
+            year: birthDate.getFullYear(),
+            month: birthDate.getMonth() + 1,
+            day: birthDate.getDate(),
+            hour: birthDate.getHours(),
+            minute: birthDate.getMinutes(),
+            birthPlace,
+            timezone: matchedPlace?.timezone || current.timezone,
+          }));
+        }
+      } finally {
+        if (active) setProfileLoading(false);
+      }
+    };
+
+    loadProfile();
+    return () => {
+      active = false;
+    };
+  }, [editingProfileId]);
 
   const fetchPreview = async () => {
     const res = await apiFetch("/bazi", {
@@ -69,6 +173,11 @@ function OnboardingContent() {
         hour: form.hour,
         minute: form.minute,
         gender: form.gender,
+        calendarType: form.calendarType,
+        isLeapMonth: form.isLeapMonth,
+        birthPlace: form.birthPlace || undefined,
+        timezone: form.timezone,
+        longitude: form.longitude === "" ? undefined : Number(form.longitude),
       }),
     });
     return res.json();
@@ -76,8 +185,12 @@ function OnboardingContent() {
 
   const next = async () => {
     if (step === 2) {
-      const data = await fetchPreview();
-      setPreview(data);
+      if (profileMode) {
+        await submit();
+        return;
+      }
+      setStep(5);
+      return;
     }
     setStep((s) => s + 1);
   };
@@ -86,72 +199,77 @@ function OnboardingContent() {
 
   const submit = async () => {
     setLoading(true);
-    const res = await apiFetch("/onboarding", {
-      method: "POST",
+    const res = await apiFetch(editingProfileId ? `/profiles/${editingProfileId}` : "/onboarding", {
+      method: editingProfileId ? "PATCH" : "POST",
       body: JSON.stringify({
+        name: form.name,
         year: form.year,
         month: form.month,
         day: form.day,
         hour: form.hour,
         minute: form.minute,
-        birthLocation: "",
+        birthLocation: form.birthPlace,
+        timezone: form.timezone,
         gender: form.gender,
       }),
     });
     setLoading(false);
     if (res.ok) {
-      router.push("/chat");
+      const result = await res.json();
+      const createdProfileId = editingProfileId ? null : result?.profile?.id;
+      const destination = profileMode && createdProfileId
+        ? `${callbackUrl}${callbackUrl.includes("?") ? "&" : "?"}newProfile=${encodeURIComponent(createdProfileId)}`
+        : callbackUrl;
+      router.push(editingProfileId ? callbackUrl : destination);
     }
   };
 
+  const currentYear = new Date().getFullYear();
+  const activeDayun = preview?.dayun?.list?.find((item, index, list) => {
+    const nextStart = list[index + 1]?.startYear ?? Number.POSITIVE_INFINITY;
+    return currentYear >= item.startYear && currentYear < nextStart;
+  });
+
   return (
-    <div className="min-h-screen bg-stone-50 flex flex-col">
-      <header className="bg-white border-b border-stone-100">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-2">
-          <Sparkles className="w-5 h-5" />
-          <span className="font-semibold tracking-[0.12em]">ECHOMERE｜洄映</span>
-        </div>
-      </header>
+    <div className="min-h-screen product-page onboarding-page bg-stone-50 flex flex-col">
+      <ProductHeader />
 
       <main className="flex-1 flex items-center justify-center p-4">
-        <div className="w-full max-w-xl bg-white rounded-2xl border border-stone-100 p-8 shadow-sm">
-          <div className="flex items-center justify-between mb-6">
-            <span className="text-xs text-stone-400">步骤 {step} / 5</span>
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div
-                  key={i}
-                  className={`h-1.5 w-6 rounded-full ${
-                    i <= step ? "bg-stone-800" : "bg-stone-200"
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-
-          {step === 1 && (
-            <div className="text-center space-y-4">
-              <h1 className="text-2xl font-medium">欢迎来到 ECHOMERE</h1>
-              <p className="text-stone-500">
-                洄映会引导你建立命盘档案，开启 AI 命理分析之旅。
-              </p>
-              <Button className="mt-4" onClick={next}>
-                开始设置
-              </Button>
-            </div>
-          )}
-
+        {profileLoading ? (
+          <Loader2 className="w-6 h-6 animate-spin text-stone-400" aria-label="正在读取档案" />
+        ) : (
+        <div className={`w-full ${step === 3 ? "max-w-3xl" : step === 2 ? "max-w-2xl" : "max-w-xl"} bg-white rounded-2xl border border-stone-100 p-8 shadow-sm`}>
           {step === 2 && (
             <div className="birth-step">
               <div className="birth-step-heading">
-                <h2 className="text-xl font-medium">填写出生时间</h2>
+                <h2 className="text-xl font-medium">个人信息</h2>
                 <p className="text-sm text-stone-500">时间越准确，映照越清晰</p>
               </div>
+
+              <section className="birth-group" aria-labelledby="basic-info-heading">
+                <div className="birth-group-heading"><h3 id="basic-info-heading">基本信息</h3></div>
+                <div className="precision-location-grid">
+                  <div className="birth-field">
+                    <Label htmlFor="profile-name">昵称</Label>
+                    <Input id="profile-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+                  </div>
+                  <div className="birth-field">
+                    <Label>性别</Label>
+                    <div className="choice-row choice-row--two" role="group" aria-label="性别">
+                      {GENDER_OPTIONS.slice(0, 2).map((option) => (
+                        <button key={option.value} type="button" className={`choice-chip ${form.gender === option.value ? "is-selected" : ""}`} onClick={() => setForm({ ...form, gender: option.value })}>
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </section>
 
               <section className="birth-group" aria-labelledby="birth-date-heading">
                 <div className="birth-group-heading">
                   <h3 id="birth-date-heading">出生日期</h3>
-                  <span>阳历 / 公历</span>
+                  <span>{form.calendarType === "solar" ? "阳历 / 公历" : "农历"}</span>
                 </div>
                 <div className="birth-date-grid">
                 <div className="birth-field birth-field-year">
@@ -211,28 +329,122 @@ function OnboardingContent() {
                 </div>
               </section>
 
+              <section className="birth-group" aria-labelledby="location-heading">
+                <div className="birth-group-heading">
+                  <h3 id="location-heading">出生地点与时区</h3>
+                  <span>根据出生地自动匹配</span>
+                </div>
+                <div className="precision-location-grid">
+                  <div className="birth-field">
+                    <Label>出生地</Label>
+                    <Select
+                      value={form.birthPlace}
+                      onValueChange={(value) => {
+                        const location = BIRTH_PLACE_OPTIONS.find((item) => item.value === value);
+                        setForm({ ...form, birthPlace: value, timezone: location?.timezone || form.timezone });
+                      }}
+                    >
+                      <SelectTrigger aria-label="出生地"><SelectValue /></SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {BIRTH_PLACE_OPTIONS.map((location) => (
+                          <SelectItem key={location.value} value={location.value}>{location.value}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="birth-field">
+                    <Label>时区</Label>
+                    <Select value={form.timezone} onValueChange={(value) => setForm({ ...form, timezone: value })}>
+                      <SelectTrigger aria-label="时区"><SelectValue /></SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {TIMEZONE_OPTIONS.map((timezone) => (
+                          <SelectItem key={timezone} value={timezone}>{timezone}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </section>
+
               <div className="birth-actions">
-                <Button variant="ghost" onClick={back}><ChevronLeft className="w-4 h-4" /> 返回</Button>
-                <Button onClick={next}>下一步</Button>
+                <Button variant="ghost" onClick={() => router.push(profileMode ? "/profiles" : "/login")}><ChevronLeft className="w-4 h-4" /> 返回</Button>
+                <Button onClick={next} disabled={loading}>{loading ? <Loader2 className="w-4 h-4 animate-spin" /> : editingProfileId ? "保存修改" : profileMode ? "完成" : "下一步"}</Button>
               </div>
             </div>
           )}
 
           {step === 3 && preview && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-medium">确认出生时间</h2>
-              <div className="bg-stone-50 rounded-xl p-6 text-center space-y-2">
-                <div className="text-2xl tracking-widest font-medium">
-                  {preview.year} · {preview.month} · {preview.day} · {preview.hour}
+            <div className="bazi-preview-step">
+              <div className="bazi-preview-heading">
+                <div>
+                  <h2 className="text-xl font-medium">命盘校准</h2>
+                  <p>完整排盘事实已生成，请核对出生信息</p>
                 </div>
-                <div className="text-sm text-stone-500">
-                  日主：{preview.dayMaster.gan}{preview.dayMaster.zhi}（{preview.dayMaster.wuxing}） · {preview.genderLabel}
+                <span className="engine-badge">{preview.engine?.name || "TAIBU CORE"} · V{preview.schemaVersion || 2}</span>
+              </div>
+
+              <div className="bazi-core-card">
+                <div className="pillar-grid" aria-label="四柱命盘">
+                  {[
+                    ["年柱", preview.year],
+                    ["月柱", preview.month],
+                    ["日柱", preview.day],
+                    ["时柱", preview.hour],
+                  ].map(([label, value]) => (
+                    <div className="pillar-item" key={label}>
+                      <span>{label}</span>
+                      <strong>{value}</strong>
+                    </div>
+                  ))}
                 </div>
-                <div className="text-xs text-stone-400">
-                  五行：{Object.entries(preview.wuxing).map(([k, v]) => `${k}${v}`).join(" / ")}
+                <div className="bazi-core-meta">
+                  <span>日主 {preview.dayMaster.gan} · {preview.dayMaster.wuxing}</span>
+                  <span>{preview.genderLabel}</span>
+                  <span>{form.calendarType === "solar" ? "阳历排盘" : "农历排盘"}</span>
                 </div>
               </div>
-              <div className="flex justify-between pt-4">
+
+              <div className="bazi-insight-grid">
+                <section className="bazi-insight-card">
+                  <div className="insight-label">时间校准</div>
+                  {preview.chart?.trueSolarTimeInfo ? (
+                    <>
+                      <strong>{preview.chart.trueSolarTimeInfo.clockTime} → {preview.chart.trueSolarTimeInfo.trueSolarTime}</strong>
+                      <p>经度 {preview.chart.trueSolarTimeInfo.longitude}° · 修正 {preview.chart.trueSolarTimeInfo.correctionMinutes} 分钟</p>
+                    </>
+                  ) : (
+                    <>
+                      <strong>标准时排盘</strong>
+                      <p>填写出生地经度可启用真太阳时</p>
+                    </>
+                  )}
+                </section>
+
+                <section className="bazi-insight-card">
+                  <div className="insight-label">当前大运</div>
+                  {activeDayun ? (
+                    <>
+                      <strong>{activeDayun.ganZhi} · {activeDayun.tenGod}</strong>
+                      <p>{activeDayun.startYear} 年起 · {activeDayun.startAge} 岁 · 十二长生「{activeDayun.diShi}」</p>
+                    </>
+                  ) : (
+                    <><strong>大运已生成</strong><p>完整周期将在命盘档案中展开</p></>
+                  )}
+                </section>
+              </div>
+
+              <section className="bazi-relations-card">
+                <div className="insight-label">盘面关系</div>
+                <div className="relation-list">
+                  {preview.chart?.relations?.length ? preview.chart.relations.slice(0, 3).map((relation, index) => (
+                    <span key={`${relation.type}-${index}`}>{relation.description}</span>
+                  )) : <span>四柱关系平稳，未见显著合冲</span>}
+                </div>
+              </section>
+
+              <p className="preview-boundary">历法与经度校准用于本次预览；现有档案接口将保存出生地与基础出生时间。</p>
+
+              <div className="birth-actions">
                 <Button variant="ghost" onClick={back}><ChevronLeft className="w-4 h-4" /> 返回修改</Button>
                 <Button onClick={next}>确认</Button>
               </div>
@@ -319,15 +531,17 @@ function OnboardingContent() {
 
           {step === 5 && (
             <div className="text-center space-y-4">
-              <h2 className="text-2xl font-medium">设置完成</h2>
-              <p className="text-stone-500">你的主命盘已创建，现在可以开始提问了。</p>
+              <h2 className="text-2xl font-medium">档案创建成功</h2>
+              <p className="text-stone-500">你的生命盘已创建，现在可以开始提问了。</p>
               <Button onClick={submit} disabled={loading}>
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "进入 ECHOMERE"}
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "进入 EchoMere"}
               </Button>
             </div>
           )}
         </div>
+        )}
       </main>
+      {profileMode && <BottomDock active="/profiles" />}
     </div>
   );
 }

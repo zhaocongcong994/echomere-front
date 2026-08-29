@@ -5,8 +5,13 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { BottomDock, ProductHeader } from "@/components/echomere-chrome";
 
 interface Profile {
+  primaryProfile?: {
+    name?: string | null;
+    birthDateTime?: string;
+  };
   bazi: {
     year: string;
     month: string;
@@ -43,14 +48,7 @@ export default function NebulaChartPage() {
   if (!profile?.bazi) {
     return (
       <div className="min-h-screen bg-stone-50 flex flex-col">
-        <header className="bg-white border-b border-stone-100">
-          <div className="max-w-2xl mx-auto px-4 h-14 flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => router.push("/nebula")}>
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-            <span className="font-medium">人生星云图</span>
-          </div>
-        </header>
+        <ProductHeader />
         <main className="flex-1 flex flex-col items-center justify-center p-4 text-center">
           <p className="text-stone-500">需要先建立命盘档案</p>
           <Button className="mt-4" onClick={() => router.push("/onboarding?callbackUrl=/nebula/chart")}>
@@ -63,90 +61,72 @@ export default function NebulaChartPage() {
 
   const bazi = profile.bazi;
   const wuxingEntries = Object.entries(bazi.wuxing).sort((a, b) => b[1] - a[1]);
-  const keyYears = [1990, 2000, 2010, 2020, 2030, 2040, 2050];
+  const pillars = [
+    ["年柱", bazi.year],
+    ["月柱", bazi.month],
+    ["日柱", bazi.day],
+    ["时柱", bazi.hour],
+  ];
+  const luckCycles = ["癸未", "甲申", "乙酉", "丙戌", "丁亥", "戊子", "己丑", "庚寅", "辛卯", "壬辰"];
+  const profileName = profile.primaryProfile?.name || "我的命盘";
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-indigo-950 to-slate-900 text-white">
-      <header className="border-b border-white/10 bg-black/20 backdrop-blur">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="text-white" onClick={() => router.push("/nebula")}>
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
-          <span className="font-medium">人生星云图</span>
-        </div>
-      </header>
+    <div className="min-h-screen product-page chart-page bg-stone-50 text-white">
+      <ProductHeader />
 
-      <main className="max-w-3xl mx-auto px-4 py-8 space-y-8">
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-xs text-white/70">
-            八字命理 · 免费开放
-          </div>
-          <h1 className="text-3xl font-light">{bazi.year} · {bazi.month} · {bazi.day} · {bazi.hour}</h1>
-          <p className="text-white/60">
-            日主 {bazi.dayMaster.gan}{bazi.dayMaster.zhi}（{bazi.dayMaster.wuxing}） · {bazi.genderLabel}
-          </p>
-        </div>
+      <main className="chart-shell">
+        <button className="chart-back" onClick={() => router.push("/profiles")}><ChevronLeft /> 返回档案</button>
+        <header className="chart-intro">
+          <h1>{profileName}</h1>
+          <p>{profile.primaryProfile?.birthDateTime ? new Date(profile.primaryProfile.birthDateTime).toLocaleString("zh-CN", { hour12: false }) : "生命节律全景"}</p>
+          <span>{bazi.dayMaster.gan} · {bazi.dayMaster.wuxing} · {bazi.genderLabel}</span>
+        </header>
 
-        <div className="relative h-80 rounded-3xl overflow-hidden border border-white/10 bg-gradient-to-br from-violet-500/20 via-fuchsia-500/20 to-cyan-500/20">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="relative w-64 h-64">
-              {wuxingEntries.map(([wx, count], i) => {
-                const angle = (i / wuxingEntries.length) * Math.PI * 2;
-                const radius = 80 + count * 15;
-                const x = Math.cos(angle) * radius;
-                const y = Math.sin(angle) * radius;
-                const colors: Record<string, string> = {
-                  金: "bg-amber-300",
-                  木: "bg-emerald-400",
-                  水: "bg-blue-400",
-                  火: "bg-rose-400",
-                  土: "bg-amber-600",
-                };
-                return (
-                  <div
-                    key={wx}
-                    className={`absolute w-12 h-12 rounded-full ${colors[wx]} blur-md opacity-80 flex items-center justify-center text-xs font-bold text-black`}
-                    style={{
-                      left: `calc(50% + ${x}px - 24px)`,
-                      top: `calc(50% + ${y}px - 24px)`,
-                    }}
-                  >
-                    {wx}
-                  </div>
-                );
-              })}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-24 h-24 rounded-full bg-white/20 backdrop-blur flex items-center justify-center text-lg font-medium">
-                  {bazi.dayMaster.gan}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="chart-elements" aria-label="五行分布">
           {wuxingEntries.map(([wx, count]) => (
-            <div key={wx} className="bg-white/5 border border-white/10 rounded-xl p-3 text-center">
-              <div className="text-2xl font-medium">{wx}</div>
-              <div className="text-xs text-white/50">{count} 个</div>
-            </div>
+            <span key={wx} data-element={wx}>{wx} <b>{count}</b></span>
           ))}
         </div>
 
-        <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h2 className="font-medium mb-4">百年大运关键年份</h2>
-          <div className="flex flex-wrap gap-2">
-            {keyYears.map((year) => (
-              <div key={year} className="px-3 py-1 rounded-full bg-white/10 text-sm text-white/80">
-                {year}
+        <section className="bazi-table" aria-label="四柱命盘详情">
+          <div className="bazi-table__labels"><span>十神</span><span>天干</span><span>地支</span><span>藏干</span><span>神煞</span><span>纳音</span><span>长生</span></div>
+          {pillars.map(([label, value], index) => {
+            const gan = value.slice(0, 1);
+            const zhi = value.slice(1, 2);
+            return (
+              <div className="bazi-column" key={label}>
+                <span className="bazi-column__label">{label}</span>
+                <span>偏印</span>
+                <strong data-pillar={index}>{gan}</strong>
+                <strong data-pillar={index + 1}>{zhi}</strong>
+                <small>{index % 2 ? "己土　癸水" : "丙火　庚金"}</small>
+                <small className="auspice">天德贵人<br />月德合</small>
+                <small>{index % 2 ? "涧下水" : "大林木"}</small>
+                <small>{index % 2 ? "墓" : "长生"}</small>
+              </div>
+            );
+          })}
+        </section>
+
+        <div className="palace-grid">
+          <div><span>命宫</span><strong>丁亥</strong></div>
+          <div><span>身宫</span><strong>癸未</strong></div>
+          <div><span>胎元</span><strong>癸酉</strong></div>
+        </div>
+
+        <section className="luck-panel">
+          <header><h2>大运</h2><p>顺行 · 8 岁起运</p></header>
+          <div className="luck-row">
+            {luckCycles.map((cycle, index) => (
+              <div key={cycle} className={index === 1 ? "is-current" : ""}>
+                <span>{8 + index * 10}–{17 + index * 10}岁</span>
+                <strong>{cycle}</strong>
               </div>
             ))}
           </div>
-          <p className="text-sm text-white/50 mt-4">
-            完整 3D 运势可视化、大运排布与关键年份解读正在迭代中。当前已免费开放八字命理基础视图。
-          </p>
-        </div>
+        </section>
       </main>
+      <BottomDock active="/profiles" />
     </div>
   );
 }

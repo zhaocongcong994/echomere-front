@@ -8,7 +8,7 @@ import {
   ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import { apiFetch, setAuthToken, clearAuthToken, getAuthToken } from "@/lib/api";
+import { apiFetch, setAuthToken, clearAuthToken, getAuthToken, isFrontendPreview } from "@/lib/api";
 
 export interface AuthUser {
   id: string;
@@ -43,6 +43,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const init = async () => {
+      if (isFrontendPreview()) {
+        setUser({
+          id: "demo-user",
+          email: "preview@echomere.local",
+          phone: null,
+          name: "妮娜",
+          locale: "zh-CN",
+          defaultDestinySystem: "bazi",
+        });
+        setToken("local-preview");
+        setLoading(false);
+        return;
+      }
       const stored = getAuthToken();
       if (!stored) {
         setLoading(false);
@@ -75,17 +88,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(newUser);
   };
 
-  const logout = async () => {
-    try {
-      await apiFetch("/auth/logout", { method: "POST" });
-    } catch (e) {
-      console.error("[auth] logout request failed", e);
-    } finally {
-      clearAuthToken();
-      setToken(null);
-      setUser(null);
-      router.push("/login");
-    }
+  const logout = () => {
+    clearAuthToken();
+    setToken(null);
+    setUser(null);
+    router.push("/login");
   };
 
   return (

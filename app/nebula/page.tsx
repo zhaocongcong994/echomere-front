@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Loader2, Orbit, Star, FileText, RefreshCw, History } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { BottomDock, ProductHeader } from "@/components/echomere-chrome";
 
 export default function NebulaEntryPage() {
   const router = useRouter();
@@ -25,15 +26,8 @@ export default function NebulaEntryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 flex flex-col">
-      <header className="bg-white border-b border-stone-100 sticky top-0 z-10">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/chat")}>
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
-          <span className="font-medium">人生星云图</span>
-        </div>
-      </header>
+    <div className="min-h-screen product-page nebula-page bg-stone-50 flex flex-col">
+      <ProductHeader />
 
       <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-8 space-y-6">
         <div className="text-center space-y-2 mb-8">
@@ -119,6 +113,7 @@ export default function NebulaEntryPage() {
           </div>
         </div>
       </main>
+      <BottomDock active="/profiles" />
     </div>
   );
 }

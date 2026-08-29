@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Loader2, Check, Sparkles } from "lucide-react";
+import { Loader2, Check, Sparkles } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { BottomDock, ProductHeader } from "@/components/echomere-chrome";
 
 interface Plan {
   id: string;
@@ -17,10 +17,10 @@ interface Plan {
 }
 
 export default function SubscriptionPage() {
-  const router = useRouter();
   const [data, setData] = useState<{ currentPlan: string; used: number; limit: number | null; plans: Plan[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [subscribing, setSubscribing] = useState<string | null>(null);
+  const [hoveredPlan, setHoveredPlan] = useState<string | null>(null);
 
   useEffect(() => {
     apiFetch("/subscription")
@@ -33,11 +33,17 @@ export default function SubscriptionPage() {
 
   const subscribe = async (planId: string) => {
     setSubscribing(planId);
-    const res = await apiFetch("/subscription", { method: "POST" });
-    setSubscribing(null);
-    if (res.ok) {
-      alert("MVP 测试期免费，已为你切换方案（不扣费）");
-      router.refresh();
+    try {
+      const res = await apiFetch("/subscription", {
+        method: "POST",
+        body: JSON.stringify({ planId }),
+      });
+
+      if (res.ok) {
+        setData((current) => current ? { ...current, currentPlan: planId } : current);
+      }
+    } finally {
+      setSubscribing(null);
     }
   };
 
@@ -50,15 +56,8 @@ export default function SubscriptionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50">
-      <header className="bg-white border-b border-stone-100">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/chat")}>
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
-          <span className="font-medium">订阅管理</span>
-        </div>
-      </header>
+    <div className="min-h-screen product-page subscription-page bg-stone-50">
+      <ProductHeader />
 
       <main className="max-w-5xl mx-auto px-4 py-8">
         <div className="text-center mb-10">
@@ -72,19 +71,15 @@ export default function SubscriptionPage() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="subscription-plan-grid grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           {data?.plans.map((plan) => (
             <div
               key={plan.id}
-              className={`bg-white rounded-2xl border p-6 shadow-sm flex flex-col ${
-                plan.popular ? "border-stone-900 ring-1 ring-stone-900" : "border-stone-100"
-              }`}
+              onMouseEnter={() => setHoveredPlan(plan.id)}
+              onMouseLeave={() => setHoveredPlan(null)}
+              aria-current={data?.currentPlan === plan.id ? "true" : undefined}
+              className={`subscription-plan-card${data?.currentPlan === plan.id ? " is-current" : ""}${hoveredPlan === plan.id ? " is-hovered" : hoveredPlan ? " is-not-hovered" : ""} bg-white rounded-2xl border border-stone-100 p-6 shadow-sm flex flex-col`}
             >
-              {plan.popular && (
-                <span className="self-start px-2 py-0.5 rounded-full bg-stone-900 text-white text-xs mb-3">
-                  最受欢迎
-                </span>
-              )}
               <h2 className="text-lg font-medium">{plan.name}</h2>
               <div className="mt-2 mb-4">
                 <span className="text-3xl font-medium">{plan.price === 0 ? "免费" : `¥${(plan.price / 100).toFixed(0)}`}</span>
@@ -120,6 +115,7 @@ export default function SubscriptionPage() {
           </ul>
         </div>
       </main>
+      <BottomDock />
     </div>
   );
 }
