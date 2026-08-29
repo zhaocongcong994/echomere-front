@@ -5,15 +5,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, isFrontendPreview } from "@/lib/api";
+import { BrandLockup, ProductHeader } from "@/components/echomere-chrome";
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
-  const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -26,7 +26,7 @@ export function LoginForm() {
     try {
       const res = await apiFetch("/auth/login", {
         method: "POST",
-        body: JSON.stringify({ email, code }),
+        body: JSON.stringify({ email: "preview@echomere.local", code }),
       });
 
       if (!res.ok) {
@@ -38,6 +38,11 @@ export function LoginForm() {
 
       const { token, user } = await res.json();
       login(token, user);
+
+      if (isFrontendPreview()) {
+        router.push("/onboarding");
+        return;
+      }
 
       const callback = searchParams.get("callbackUrl") || "/chat";
 
@@ -58,37 +63,24 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-stone-50 px-4">
-      <div className="w-full max-w-sm bg-white rounded-2xl border border-stone-100 p-8 shadow-sm">
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <Sparkles className="w-5 h-5" />
-          <span className="font-semibold text-lg tracking-[0.12em]">ECHOMERE｜洄映</span>
-        </div>
+    <div className="min-h-screen product-page auth-page flex flex-col bg-stone-50">
+      <ProductHeader />
+      <main className="flex-1 flex items-center justify-center px-4 py-12">
+      <div className="auth-card w-full max-w-sm bg-white rounded-2xl border border-stone-100 p-8 shadow-sm">
+        <div className="auth-card__brand"><BrandLockup /></div>
 
-        <h1 className="text-xl font-medium text-center mb-2">登录或注册</h1>
+        <h1 className="text-xl font-medium text-center mb-2">邀请码登录</h1>
         <p className="text-sm text-stone-500 text-center mb-6">
-          测试期使用邮箱 + 固定验证码 123456
+          输入账号与邀请码，继续访问洄映
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">邮箱 / 手机号</Label>
-            <Input
-              id="email"
-              type="text"
-              placeholder="you@example.com 或 13800138000"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="code">验证码</Label>
+            <Label htmlFor="code">邀请码</Label>
             <Input
               id="code"
               type="text"
-              placeholder="123456"
+              placeholder="请输入邀请码"
               value={code}
               onChange={(e) => setCode(e.target.value)}
               required
@@ -98,14 +90,15 @@ export function LoginForm() {
           {error && <p className="text-sm text-red-500">{error}</p>}
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "继续"}
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "验证并进入"}
           </Button>
         </form>
 
         <p className="text-xs text-stone-400 text-center mt-6">
-          登录即表示你同意我们的服务条款与隐私政策
+          邀请码仅限本人使用，请勿分享
         </p>
       </div>
+      </main>
     </div>
   );
 }

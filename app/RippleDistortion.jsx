@@ -159,6 +159,7 @@ const RippleDistortion = ({
   clickStrength = 2,
   quality = 'low',
   enabled = true,
+  onReady,
   className = '',
   style
 }) => {
@@ -208,6 +209,9 @@ const RippleDistortion = ({
       if (disposed) return;
       imageTexture.image = image;
       compositeUniforms.uTextureSize.value = [image.naturalWidth || 1, image.naturalHeight || 1];
+      requestAnimationFrame(() => {
+        if (!disposed) onReady?.();
+      });
     };
     image.src = src;
 

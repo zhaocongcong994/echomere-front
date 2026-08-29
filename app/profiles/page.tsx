@@ -3,30 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { ChevronLeft, Plus, Star, Trash2, Loader2 } from "lucide-react";
+import { Pencil, Plus, Star, Trash2, Loader2, Orbit } from "lucide-react";
 import { apiFetch } from "@/lib/api";
-
-const YEARS = Array.from({ length: 100 }, (_, i) => 2026 - i);
-const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1);
-const DAYS = Array.from({ length: 31 }, (_, i) => i + 1);
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
-const MINUTES = Array.from({ length: 60 }, (_, i) => i);
+import { BottomDock, ProductHeader } from "@/components/echomere-chrome";
 
 interface Profile {
   id: string;
@@ -42,22 +21,9 @@ export default function ProfilesPage() {
   const router = useRouter();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({
-    name: "",
-    gender: "male",
-    year: 1990,
-    month: 1,
-    day: 15,
-    hour: 12,
-    minute: 30,
-    type: "others",
-  });
-  const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    fetchProfiles();
-  }, []);
+  const [newProfileId, setNewProfileId] = useState<string | null>(null);
+  const [deletingProfileId, setDeletingProfileId] = useState<string | null>(null);
+  const [selectingProfileId, setSelectingProfileId] = useState<string | null>(null);
 
   async function fetchProfiles() {
     const res = await apiFetch("/profiles");
@@ -68,30 +34,83 @@ export default function ProfilesPage() {
     setLoading(false);
   }
 
-  const createProfile = async () => {
-    setSubmitting(true);
-    const res = await apiFetch("/profiles", {
-      method: "POST",
-      body: JSON.stringify(form),
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const createdId = params.get("newProfile");
+    let active = true;
+    let timer: number | undefined;
+    // Data is loaded asynchronously; state changes occur after the request resolves.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchProfiles().then(() => {
+      if (!active || !createdId) return;
+      setNewProfileId(createdId);
+      timer = window.setTimeout(() => setNewProfileId(null), 3200);
     });
-    setSubmitting(false);
-    if (res.ok) {
-      setDialogOpen(false);
-      fetchProfiles();
+
+    if (createdId) {
+      params.delete("newProfile");
+      const cleanSearch = params.toString();
+      window.history.replaceState(null, "", `${window.location.pathname}${cleanSearch ? `?${cleanSearch}` : ""}${window.location.hash}`);
+    }
+
+    return () => {
+      active = false;
+      if (timer !== undefined) window.clearTimeout(timer);
+    };
+  }, []);
+
+  const selectProfile = async (id: string, openBazi = false) => {
+    if (selectingProfileId || deletingProfileId) return;
+
+    const selected = profiles.find((profile) => profile.id === id);
+    if (selected?.isPrimary) {
+      if (openBazi) router.push("/nebula/chart");
+      return;
+    }
+
+    setSelectingProfileId(id);
+    setProfiles((current) => current.map((profile) => ({ ...profile, isPrimary: profile.id === id })));
+
+    try {
+      const res = await apiFetch(`/profiles/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ isPrimary: true }),
+      });
+
+      if (!res.ok) {
+        await fetchProfiles();
+        return;
+      }
+
+      if (openBazi) router.push("/nebula/chart");
+    } catch {
+      await fetchProfiles();
+    } finally {
+      setSelectingProfileId(null);
     }
   };
 
-  const setPrimary = async (id: string) => {
-    await apiFetch(`/profiles/${id}`, {
-      method: "PATCH",
-      body: JSON.stringify({ isPrimary: true }),
-    });
-    fetchProfiles();
-  };
-
   const deleteProfile = async (id: string) => {
-    await apiFetch(`/profiles/${id}`, { method: "DELETE" });
-    fetchProfiles();
+    if (deletingProfileId) return;
+    setDeletingProfileId(id);
+
+    try {
+      const [res] = await Promise.all([
+        apiFetch(`/profiles/${id}`, { method: "DELETE" }),
+        new Promise((resolve) => window.setTimeout(resolve, 520)),
+      ]);
+
+      if (!res.ok) {
+        setDeletingProfileId(null);
+        return;
+      }
+
+      setProfiles((current) => current.filter((profile) => profile.id !== id));
+      if (newProfileId === id) setNewProfileId(null);
+      setDeletingProfileId(null);
+    } catch {
+      setDeletingProfileId(null);
+    }
   };
 
   const parseBazi = (p: Profile) => {
@@ -111,133 +130,52 @@ export default function ProfilesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50">
-      <header className="bg-white border-b border-stone-100">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/chat")}>
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
-          <span className="font-medium">命运档案</span>
-        </div>
-      </header>
+    <div className="min-h-screen product-page profiles-page bg-stone-50">
+      <ProductHeader />
 
       <main className="max-w-3xl mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl font-medium">我的命盘</h1>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger render={<Button size="sm" />}>
-              <Plus className="w-4 h-4 mr-1" /> 新增档案
-            </DialogTrigger>
-            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>新增命盘档案</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-2">
-                <div>
-                  <Label>称呼</Label>
-                  <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="如：小明" />
-                </div>
-                <div>
-                  <Label>关系</Label>
-                  <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v as string })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="self">自己</SelectItem>
-                      <SelectItem value="others">他人</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>性别</Label>
-                  <Select value={form.gender} onValueChange={(v) => setForm({ ...form, gender: v as string })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="male">男</SelectItem>
-                      <SelectItem value="female">女</SelectItem>
-                      <SelectItem value="other">其他</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <Label>年</Label>
-                    <Select value={String(form.year)} onValueChange={(v) => setForm({ ...form, year: Number(v) })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent className="max-h-60">
-                        {YEARS.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>月</Label>
-                    <Select value={String(form.month)} onValueChange={(v) => setForm({ ...form, month: Number(v) })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {MONTHS.map((m) => <SelectItem key={m} value={String(m)}>{m}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>日</Label>
-                    <Select value={String(form.day)} onValueChange={(v) => setForm({ ...form, day: Number(v) })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        {DAYS.map((d) => <SelectItem key={d} value={String(d)}>{d}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <Label>时</Label>
-                    <Select value={String(form.hour)} onValueChange={(v) => setForm({ ...form, hour: Number(v) })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent className="max-h-60">
-                        {HOURS.map((h) => <SelectItem key={h} value={String(h)}>{h}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label>分</Label>
-                    <Select value={String(form.minute)} onValueChange={(v) => setForm({ ...form, minute: Number(v) })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent className="max-h-60">
-                        {MINUTES.map((m) => <SelectItem key={m} value={String(m)}>{m}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <Button onClick={createProfile} disabled={submitting} className="w-full">
-                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "保存并设为主命盘"}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+          <h1 className="text-xl font-medium">我的档案</h1>
+          <Button size="sm" onClick={() => router.push("/onboarding?profileMode=1&callbackUrl=/profiles")}>
+            <Plus className="w-4 h-4" /> 新增档案
+          </Button>
         </div>
 
         <div className="space-y-4">
           {profiles.map((p) => {
             const bazi = parseBazi(p);
             return (
-              <div key={p.id} className="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm">
+              <div
+                key={p.id}
+                className={`profile-card bg-white rounded-2xl border border-stone-100 p-5 shadow-sm ${p.isPrimary ? "is-primary" : ""}${p.id === newProfileId ? " is-new" : ""}${p.id === deletingProfileId ? " is-deleting" : ""}${p.id === selectingProfileId ? " is-selecting" : ""}`}
+                data-profile-id={p.id}
+                role="button"
+                tabIndex={0}
+                aria-pressed={p.isPrimary}
+                onClick={() => selectProfile(p.id)}
+                onKeyDown={(event) => event.key === "Enter" && selectProfile(p.id)}
+              >
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="flex items-center gap-2">
                       <h2 className="text-lg font-medium">{p.name || "未命名"}</h2>
                       {p.isPrimary && <Star className="w-4 h-4 text-amber-500 fill-amber-500" />}
+                      {p.id === newProfileId && <span className="profile-card__new-label">刚刚创建</span>}
                     </div>
                     <p className="text-xs text-stone-400 mt-1">
                       {p.type === "self" ? "自己" : "他人"} · {p.gender === "male" ? "男" : p.gender === "female" ? "女" : "其他"}
                     </p>
                   </div>
                   <div className="flex gap-2">
-                    {!p.isPrimary && (
-                      <Button variant="ghost" size="icon" onClick={() => setPrimary(p.id)}>
-                        <Star className="w-4 h-4 text-stone-400" />
-                      </Button>
-                    )}
-                    <Button variant="ghost" size="icon" onClick={() => deleteProfile(p.id)}>
-                      <Trash2 className="w-4 h-4 text-stone-400" />
+                    <Button variant="outline" size="sm" className="profile-bazi-button" disabled={Boolean(deletingProfileId || selectingProfileId)} onClick={(event) => { event.stopPropagation(); selectProfile(p.id, true); }}>
+                      {p.id === selectingProfileId ? <Loader2 className="w-4 h-4 animate-spin" /> : <Orbit className="w-4 h-4" />}
+                      我的八字
+                    </Button>
+                    <Button variant="ghost" size="icon" aria-label="修改档案" onClick={(event) => { event.stopPropagation(); router.push(`/onboarding?profileMode=1&profileId=${encodeURIComponent(p.id)}&callbackUrl=/profiles`); }}>
+                      <Pencil className="w-4 h-4 text-stone-400" />
+                    </Button>
+                    <Button variant="ghost" size="icon" aria-label="删除档案" disabled={Boolean(deletingProfileId)} onClick={(event) => { event.stopPropagation(); deleteProfile(p.id); }}>
+                      {p.id === deletingProfileId ? <Loader2 className="w-4 h-4 animate-spin text-stone-400" /> : <Trash2 className="w-4 h-4 text-stone-400" />}
                     </Button>
                   </div>
                 </div>
@@ -259,6 +197,7 @@ export default function ProfilesPage() {
           })}
         </div>
       </main>
+      <BottomDock />
     </div>
   );
 }

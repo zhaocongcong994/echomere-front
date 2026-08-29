@@ -3,14 +3,12 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { apiFetch } from "@/lib/api";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import {
   MessageCircle,
-  Sparkles,
-  User,
   Menu,
   X,
   ThumbsUp,
@@ -18,23 +16,16 @@ import {
   Loader2,
   ChevronDown,
   ChevronUp,
-  CalendarDays,
-  Orbit,
-  CreditCard,
   Home,
   ArrowUp,
-  LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
+  Trash2,
 } from "lucide-react";
-
-const MODES = [
-  { id: "suiyuan", label: "随缘", sub: "AI 自动匹配最佳解读模式" },
-  { id: "kanyun", label: "看运", sub: "根据生辰，解读过去、现在与未来" },
-  { id: "qingting", label: "倾听", sub: "陪你聊聊，不急于给建议" },
-  { id: "wenshi", label: "问事", sub: "一事一占，六爻解读" },
-];
+import { BottomDock, BrandLockup, EchoMark } from "@/components/echomere-chrome";
 
 const RECOMMENDED_QUESTIONS: Record<string, string[]> = {
-  suiyuan: ["我天生适合做什么", "最近感觉不太顺", "这个 offer 该不该接", "我的桃花运怎么样"],
+  suiyuan: ["天生适合做什么", "这个offer该不该接", "我的桃花运怎么样", "我的桃花运怎么样", "最近感觉不太顺"],
   kanyun: ["分析一下我今年的年度运势", "我的桃花运怎么样", "今年适合换工作吗", "我的财运如何"],
   qingting: ["最近压力好大", "感觉人生没有方向", "和家里人关系很紧张", "最近总是睡不好"],
   wenshi: ["这个 offer 该不该接", "要不要离开这份工作", "今年适合创业吗", "和 TA 合适吗"],
@@ -52,32 +43,27 @@ interface Message {
 interface Conversation {
   id: string;
   mode: string;
-  originalMode: string | null;
   title: string;
   updatedAt: string;
 }
 
-const NAV_ITEMS = [
-  { id: "chat", icon: MessageCircle, label: "新对话", href: "/chat" },
-  { id: "nebula", icon: Orbit, label: "人生星云图", href: "/nebula" },
-  { id: "profiles", icon: User, label: "命运档案", href: "/profiles" },
-  { id: "daily-fortune", icon: CalendarDays, label: "每日运势", href: "/daily-fortune" },
-  { id: "subscription", icon: CreditCard, label: "订阅", href: "/subscription" },
-];
-
 function ChatContent() {
-  const { user, loading: authLoading, logout } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [mode, setMode] = useState("suiyuan");
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeProfileName, setActiveProfileName] = useState("");
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [expandedThinking, setExpandedThinking] = useState<string | null>(null);
+  const [deletingConversationId, setDeletingConversationId] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Conversation | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -85,12 +71,27 @@ function ChatContent() {
   }, [authLoading, user, router]);
 
   useEffect(() => {
-    if (user) fetchConversations();
+    if (user) {
+      fetchConversations();
+      fetchActiveProfileName();
+    }
   }, [user]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  useEffect(() => {
+    if (!pendingDelete) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !deletingConversationId) {
+        setPendingDelete(null);
+        setDeleteError(null);
+      }
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [pendingDelete, deletingConversationId]);
 
   useEffect(() => {
     const q = searchParams.get("question");
@@ -119,6 +120,18 @@ function ChatContent() {
     }
   }
 
+  async function fetchActiveProfileName() {
+    try {
+      const res = await apiFetch("/profile");
+      if (!res.ok) return;
+
+      const data = await res.json();
+      setActiveProfileName(data.primaryProfile?.name?.trim() || "");
+    } catch {
+      setActiveProfileName("");
+    }
+  }
+
   const loadConversation = async (id: string) => {
     const res = await apiFetch(`/conversations/${id}`);
     if (!res.ok) return;
@@ -138,6 +151,30 @@ function ChatContent() {
     setCurrentConversationId(null);
     setMessages([]);
     setMode("suiyuan");
+  };
+
+  const deleteConversation = async () => {
+    if (!pendingDelete) return;
+
+    const { id } = pendingDelete;
+    setDeletingConversationId(id);
+    setDeleteError(null);
+    try {
+      const res = await apiFetch(`/conversations/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const result = await res.json().catch(() => null);
+        setDeleteError(result?.error || "删除失败，请稍后重试。");
+        return;
+      }
+
+      setConversations((current) => current.filter((conversation) => conversation.id !== id));
+      if (currentConversationId === id) startNewChat();
+      setPendingDelete(null);
+    } catch {
+      setDeleteError("网络异常，暂时无法删除，请重试。");
+    } finally {
+      setDeletingConversationId(null);
+    }
   };
 
   const extractRouteReason = (): string | undefined => {
@@ -331,58 +368,69 @@ function ChatContent() {
   };
 
   return (
-    <div className="h-screen flex bg-white">
+    <div className="chat-page h-screen flex bg-white">
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-72 bg-stone-50 border-r border-stone-100 transform transition-transform duration-200 md:translate-x-0 md:static ${
+        className={`chat-sidebar${sidebarCollapsed ? " is-collapsed" : ""} fixed inset-y-0 left-0 z-40 w-72 bg-stone-50 border-r border-stone-100 transform transition-transform duration-200 md:translate-x-0 md:static ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="h-14 flex items-center justify-between px-4 border-b border-stone-100">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4" />
-            <span className="font-semibold text-sm tracking-[0.12em]">ECHOMERE｜洄映</span>
-          </div>
+        <div className="chat-sidebar__brand border-b border-stone-100">
+          <BrandLockup />
+          <button
+            type="button"
+            className="chat-sidebar__collapse hidden md:grid"
+            onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
+            aria-label={sidebarCollapsed ? "展开左侧导航" : "收起左侧导航"}
+            title={sidebarCollapsed ? "展开导航" : "收起导航"}
+          >
+            {sidebarCollapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
+          </button>
           <button onClick={() => setSidebarOpen(false)} className="md:hidden">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-3 space-y-2">
-          <Button variant="outline" className="w-full justify-start gap-2" onClick={() => router.push("/")}>
-            <Home className="w-4 h-4" /> 返回首页
+        <div className="chat-sidebar__actions">
+          <Button variant="outline" className="chat-sidebar__button w-full justify-start" onClick={() => router.push("/")}>
+            <Home className="w-4 h-4" /> <span className="chat-sidebar__label">返回首页</span>
           </Button>
-          <Button variant="outline" className="w-full justify-start gap-2 text-stone-500" onClick={logout}>
-            <LogOut className="w-4 h-4" /> 退出登录
-          </Button>
-          <Button variant="outline" className="w-full justify-start gap-2" onClick={startNewChat}>
-            <MessageCircle className="w-4 h-4" /> 新对话
+          <Button variant="outline" className="chat-sidebar__button w-full justify-start" onClick={startNewChat}>
+            <MessageCircle className="w-4 h-4" /> <span className="chat-sidebar__label">新对话</span>
           </Button>
         </div>
 
-        <div className="px-4 py-2 text-xs font-medium text-stone-400">对话记录</div>
-        <div className="overflow-y-auto flex-1 px-2 pb-4 space-y-1">
+        <div className="chat-sidebar__section-title text-xs font-medium text-stone-400">对话记录</div>
+        <div className="chat-sidebar__history overflow-y-auto flex-1 pb-4 space-y-1">
           {conversations.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => loadConversation(c.id)}
-              className={`w-full text-left px-3 py-2 rounded-lg text-sm truncate transition-colors ${
-                currentConversationId === c.id ? "bg-stone-200" : "hover:bg-stone-100"
-              }`}
-            >
-              <div className="truncate">{c.title}</div>
-              <div className="text-xs text-stone-400">
-                {c.originalMode === "suiyuan"
-                  ? "随缘"
-                  : c.mode === "kanyun"
-                    ? "看运"
-                    : c.mode === "qingting"
-                      ? "倾听"
-                      : c.mode === "wenshi"
-                        ? "问事"
-                        : "随缘"}
-              </div>
-            </button>
+            <div key={c.id} className="chat-history-item">
+              <button
+                onClick={() => loadConversation(c.id)}
+                className={`chat-history-main text-left px-3 py-2 text-sm transition-colors ${
+                  currentConversationId === c.id ? "is-active" : ""
+                }`}
+              >
+                <div className="truncate">{c.title}</div>
+                <div className="text-xs text-stone-400">
+                  {c.mode === "kanyun" ? "看运" : c.mode === "qingting" ? "倾听" : c.mode === "wenshi" ? "问事" : "随缘"}
+                </div>
+              </button>
+              <button
+                type="button"
+                className="chat-history-delete"
+                aria-label={`删除对话：${c.title}`}
+                title="删除对话"
+                disabled={deletingConversationId === c.id}
+                onClick={() => {
+                  setDeleteError(null);
+                  setPendingDelete(c);
+                }}
+              >
+                {deletingConversationId === c.id
+                  ? <Loader2 className="animate-spin" />
+                  : <Trash2 />}
+              </button>
+            </div>
           ))}
         </div>
       </aside>
@@ -391,8 +439,57 @@ function ChatContent() {
         <div className="fixed inset-0 bg-black/20 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
+      {pendingDelete && (
+        <div
+          className="chat-delete-dialog-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !deletingConversationId) {
+              setPendingDelete(null);
+              setDeleteError(null);
+            }
+          }}
+        >
+          <section
+            className="chat-delete-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="chat-delete-dialog-title"
+            aria-describedby="chat-delete-dialog-description"
+          >
+            <div className="chat-delete-dialog__icon" aria-hidden="true"><Trash2 /></div>
+            <h2 id="chat-delete-dialog-title">是否确定删除？</h2>
+            <p id="chat-delete-dialog-description">
+              对话“{pendingDelete.title}”及其中的全部消息将被永久删除，无法恢复。
+            </p>
+            {deleteError && <p className="chat-delete-dialog__error" role="alert">{deleteError}</p>}
+            <div className="chat-delete-dialog__actions">
+              <button
+                type="button"
+                className="chat-delete-dialog__cancel"
+                disabled={Boolean(deletingConversationId)}
+                onClick={() => {
+                  setPendingDelete(null);
+                  setDeleteError(null);
+                }}
+              >
+                取消
+              </button>
+              <button
+                type="button"
+                className="chat-delete-dialog__confirm"
+                disabled={Boolean(deletingConversationId)}
+                onClick={deleteConversation}
+              >
+                {deletingConversationId ? <><Loader2 className="animate-spin" /> 正在删除</> : "确定删除"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
       {/* Main */}
-      <main className="flex-1 flex flex-col min-w-0">
+      <main className="chat-main flex-1 flex flex-col min-w-0">
         <header className="h-14 border-b border-stone-100 flex items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <button onClick={() => setSidebarOpen(true)} className="md:hidden p-2">
@@ -404,35 +501,22 @@ function ChatContent() {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-stone-600 hidden md:inline">{user?.name || user?.email}</span>
+            <span className="text-sm text-stone-600 hidden md:inline">{activeProfileName || "当前档案"}</span>
           </div>
         </header>
 
         <div className="flex-1 overflow-y-auto">
           {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center px-4 text-center">
-              <h1 className="text-3xl md:text-5xl font-light mb-4">
-                {user?.name || "你好"}
+            <div className="chat-empty-state h-full flex flex-col items-center justify-center px-4 text-center">
+              <h1 className="text-3xl md:text-5xl font-light">
+                {activeProfileName || "你好"}
               </h1>
-              <p className="text-stone-500 mb-8">慢慢来，洄映会引导你找到答案</p>
+              <p className="chat-empty-copy text-stone-500">
+                以八字与星盘为双重映照，<br />
+                于时间的回响中，辨认此刻的自己。
+              </p>
 
-              <div className="flex flex-wrap justify-center gap-2 mb-6">
-                {MODES.map((m) => (
-                  <button
-                    key={m.id}
-                    onClick={() => setMode(m.id)}
-                    className={`px-4 py-2 rounded-full text-sm border transition-colors ${
-                      mode === m.id
-                        ? "bg-stone-900 text-white border-stone-900"
-                        : "bg-white text-stone-600 border-stone-200 hover:border-stone-300"
-                    }`}
-                  >
-                    {m.label}
-                  </button>
-                ))}
-              </div>
-
-              <div className="w-full max-w-2xl mb-4">
+              <div className="chat-empty-composer w-full max-w-2xl">
                 <div className="relative chat-composer">
                   <Input
                     value={input}
@@ -444,7 +528,7 @@ function ChatContent() {
                   />
                   <Button
                     size="icon"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full chat-composer-send"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 chat-composer-send"
                     onClick={() => sendMessage(input)}
                     disabled={loading || !input.trim()}
                   >
@@ -453,10 +537,10 @@ function ChatContent() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap justify-center gap-2 max-w-xl">
-                {(RECOMMENDED_QUESTIONS[mode as keyof typeof RECOMMENDED_QUESTIONS] || []).map((q) => (
+              <div className="chat-empty-suggestions flex flex-wrap justify-center gap-2 max-w-xl">
+                {(RECOMMENDED_QUESTIONS[mode as keyof typeof RECOMMENDED_QUESTIONS] || []).map((q, index) => (
                   <button
-                    key={q}
+                    key={`${q}-${index}`}
                     onClick={() => sendMessage(q)}
                     className="px-4 py-2 rounded-full bg-stone-50 border border-stone-100 text-sm text-stone-600 hover:bg-stone-100"
                   >
@@ -477,9 +561,9 @@ function ChatContent() {
                     }`}
                   >
                     {msg.role === "assistant" && (
-                      <div className="flex items-center gap-2 mb-2">
-                        <Sparkles className="w-4 h-4 text-stone-400" />
-                        <span className="text-xs text-stone-400">洄映</span>
+                      <div className="chat-answer-brand mb-2 text-stone-400">
+                        <EchoMark />
+                        <span>洄映</span>
                       </div>
                     )}
 
@@ -546,7 +630,7 @@ function ChatContent() {
                   />
                   <Button
                     size="icon"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full chat-composer-send"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 chat-composer-send"
                     onClick={() => sendMessage(input)}
                     disabled={loading || !input.trim()}
                   >
@@ -558,26 +642,8 @@ function ChatContent() {
           </>
         )}
 
-        <div className="border-t border-stone-100 py-2">
-          <div className="max-w-3xl mx-auto flex justify-center gap-6 text-stone-400">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => item.href !== "/chat" && router.push(item.href)}
-                  title={item.label}
-                  className={`hover:text-stone-600 transition-colors ${
-                    isActive ? "text-stone-900" : ""
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <BottomDock />
+
       </main>
     </div>
   );

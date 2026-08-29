@@ -3,7 +3,7 @@ const BACKEND_ORIGIN = (
   process.env.ECHOMERE_BACKEND_ORIGIN ||
   (process.env.NODE_ENV === "production"
     ? REMOTE_BACKEND_ORIGIN
-    : "http://127.0.0.1:3001")
+    : "http://127.0.0.1:3201")
 ).replace(/\/$/, "");
 
 const BACKEND_HOST =

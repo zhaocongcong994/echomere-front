@@ -1,56 +1,37 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import RippleDistortion from './RippleDistortion';
-
-const Arrow = () => <span aria-hidden="true">↗</span>;
+import { BrandLockup } from '@/components/echomere-chrome';
 
 export default function Home() {
   const [orbActive, setOrbActive] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setIsLoggedIn(Boolean(localStorage.getItem('echomere-token')));
-    }
-  }, []);
-
-  const enterHref = isLoggedIn ? '/chat' : '/login';
+  const [visualReady, setVisualReady] = useState(false);
 
   return (
-    <main className="hero-shell">
+    <main className={`hero-shell${visualReady ? ' is-visual-ready' : ''}`}>
       <RippleDistortion
-        src="/hero-v2.png"
+        src="/hero-updated.png"
         brushSize={97.5}
         strength={0.105}
         swirl={1}
         rings={2.5}
         grayscale
         spread={5.75}
+        onReady={() => setVisualReady(true)}
       />
 
       <div className="hero-vignette" aria-hidden="true" />
       <div className="film-grain" aria-hidden="true" />
 
       <nav className="site-nav" aria-label="主导航">
-        <a className="wordmark" href="#top" aria-label="ECHOMERE 洄映首页">
-          <span>ECHOMERE</span>
-          <i aria-hidden="true" />
-          <em>洄映</em>
-        </a>
-        <a className="enter-link" href={enterHref}>
-          进入洄映 <Arrow />
-        </a>
+        <BrandLockup href="#top" />
       </nav>
 
       <section className="hero-content" id="top">
         <div className="hero-copy" id="begin">
-          <p className="kicker">ECHO · WATER · MIRROR</p>
+          <p className="kicker">ECHO · WATER · MERE</p>
           <h1><span>一念成漪</span><span>照见未见</span></h1>
-          <p className="intro">
-            以八字与星盘为双重映照，<br />
-            于时间的回响中，辨认此刻的自己。
-          </p>
         </div>
 
       </section>
@@ -59,11 +40,11 @@ export default function Home() {
         <button
           className={`echo-orb${orbActive ? ' is-active' : ''}`}
           type="button"
-          aria-label="建立回响"
+          aria-label="聆听回响"
           aria-pressed={orbActive}
           onClick={() => {
             setOrbActive(true);
-            window.setTimeout(() => window.location.assign(enterHref), 360);
+            window.setTimeout(() => window.location.assign('/login'), 360);
           }}
         >
           <span className="orb-aura" aria-hidden="true" />
@@ -71,7 +52,7 @@ export default function Home() {
           <span className="orb-flow flow-two" aria-hidden="true" />
           <span className="orb-flow flow-three" aria-hidden="true" />
           <span className="orb-copy">
-            <span>建立回响</span>
+            <span>聆听回响</span>
           </span>
         </button>
       </div>

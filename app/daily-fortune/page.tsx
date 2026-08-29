@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Loader2, Sun } from "lucide-react";
 import { apiFetch } from "@/lib/api";
+import { BottomDock, ProductHeader } from "@/components/echomere-chrome";
 
 interface DailyFortuneData {
   error?: string;
@@ -53,32 +54,19 @@ export default function DailyFortunePage() {
   if (data?.error === "NO_PROFILE") {
     return (
       <div className="min-h-screen bg-stone-50 flex flex-col">
-        <header className="bg-white border-b border-stone-100">
-          <div className="max-w-2xl mx-auto px-4 h-14 flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => router.push("/chat")}>
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-            <span className="font-medium">每日运势</span>
-          </div>
-        </header>
+        <ProductHeader />
         <main className="flex-1 flex flex-col items-center justify-center p-4 text-center">
           <p className="text-stone-500">需要先建立命盘档案</p>
           <Button className="mt-4" onClick={() => router.push("/onboarding")}>创建命盘</Button>
         </main>
+        <BottomDock />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-stone-50">
-      <header className="bg-white border-b border-stone-100">
-        <div className="max-w-2xl mx-auto px-4 h-14 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/chat")}>
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
-          <span className="font-medium">每日运势</span>
-        </div>
-      </header>
+    <div className="min-h-screen product-page fortune-page bg-stone-50">
+      <ProductHeader />
 
       <main className="max-w-2xl mx-auto px-4 py-8 space-y-6">
         <div className="text-center space-y-2">
@@ -125,6 +113,7 @@ export default function DailyFortunePage() {
           </p>
         </div>
       </main>
+      <BottomDock />
     </div>
   );
 }
