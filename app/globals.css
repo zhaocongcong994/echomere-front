@@ -1682,13 +1682,70 @@ input::placeholder, textarea::placeholder { color: rgba(236,233,228,.3); }
   -webkit-backdrop-filter: blur(17px);
 }
 
-.auth-page main { padding-top: 42px; padding-bottom: 86px; }
-.auth-page .product-header { justify-content: flex-start; }
-.auth-card { max-width: 390px !important; padding: 34px 32px 28px !important; border-radius: 16px !important; }
-.auth-card__brand { margin-bottom: 27px; }
-.auth-card form { gap: 17px; }
-.auth-card [data-slot="input"] { height: 42px; background: rgba(0,0,0,.28); }
-.auth-card [data-slot="button"] { margin-top: 7px; }
+.auth-page main { min-height: 100svh; padding-block: 42px; }
+.login-card {
+  max-width: 770px !important;
+  padding: clamp(42px, 5vw, 72px) clamp(30px, 5vw, 64px) clamp(36px, 4.4vw, 58px) !important;
+  border-radius: 30px !important;
+  border-color: rgba(255,255,255,.16) !important;
+  background: linear-gradient(145deg, rgba(17,16,21,.94), rgba(6,6,8,.94)) !important;
+  box-shadow: inset 0 1px rgba(255,255,255,.035), 0 34px 100px rgba(0,0,0,.56) !important;
+}
+.login-card .auth-card__brand { margin-bottom: 54px; }
+.login-card .auth-card__brand .echo-brand { transform: scale(1.45); transform-origin: center; }
+.login-card .auth-card__brand .echo-brand small { display: none; }
+.login-card h1 {
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-serif), serif;
+  font-size: clamp(31px, 3vw, 42px);
+  font-weight: 400;
+  letter-spacing: .025em;
+}
+.login-card__hint {
+  margin: 20px 0 48px;
+  text-align: center;
+  color: rgba(236,232,228,.48);
+  font-size: clamp(15px, 1.65vw, 22px);
+  font-weight: 600;
+}
+.login-card form { display: grid; gap: 28px; }
+.login-field { display: grid; gap: 12px; }
+.login-field label { color: rgba(248,246,242,.9); font-size: 18px; font-weight: 600; }
+.login-card [data-slot="input"] {
+  height: 64px;
+  padding-inline: 20px;
+  border-radius: 999px;
+  border-color: rgba(255,255,255,.22);
+  color: rgba(248,246,242,.92);
+  background: rgba(0,0,0,.28);
+  font-size: 19px;
+}
+.login-card [data-slot="input"]::placeholder { color: rgba(238,234,230,.28); }
+.login-card__submit {
+  height: 62px !important;
+  margin-top: 7px;
+  border: 1px solid rgba(190,145,219,.42) !important;
+  border-radius: 999px !important;
+  color: rgba(252,248,253,.94) !important;
+  background: linear-gradient(100deg, rgba(68,43,84,.48), rgba(24,25,35,.76)) !important;
+  box-shadow: inset 0 1px rgba(255,255,255,.05), 0 0 22px rgba(134,79,170,.12);
+  font-size: 20px;
+  font-weight: 600;
+}
+.login-card__submit:hover { border-color: rgba(207,162,233,.68) !important; background: linear-gradient(100deg, rgba(83,49,104,.58), rgba(28,28,39,.82)) !important; }
+.login-card__error { margin: -10px 4px 0; color: #e8a3ad; font-size: 14px; }
+.login-card__legal { margin: 48px 0 0; text-align: center; color: rgba(234,230,226,.28); font-size: 14px; font-weight: 600; }
+
+@media (max-width: 640px) {
+  .login-card { border-radius: 22px !important; }
+  .login-card .auth-card__brand { margin-bottom: 38px; }
+  .login-card .auth-card__brand .echo-brand { transform: scale(1.12); }
+  .login-card__hint { margin-bottom: 34px; }
+  .login-card [data-slot="input"] { height: 56px; font-size: 16px; }
+  .login-card__submit { height: 56px !important; }
+  .login-card__legal { margin-top: 36px; font-size: 12px; }
+}
 
 .onboarding-page main > div { border-radius: 16px !important; }
 .onboarding-page main { padding-block: 28px 104px !important; }

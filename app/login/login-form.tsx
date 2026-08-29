@@ -8,12 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/components/auth-provider";
 import { apiFetch, isFrontendPreview } from "@/lib/api";
-import { BrandLockup, ProductHeader } from "@/components/echomere-chrome";
+import { BrandLockup } from "@/components/echomere-chrome";
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
+  const [identifier, setIdentifier] = useState("");
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -26,7 +27,7 @@ export function LoginForm() {
     try {
       const res = await apiFetch("/auth/login", {
         method: "POST",
-        body: JSON.stringify({ email: "preview@echomere.local", code }),
+        body: JSON.stringify({ email: identifier.trim(), code }),
       });
 
       if (!res.ok) {
@@ -63,39 +64,54 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen product-page auth-page flex flex-col bg-stone-50">
-      <ProductHeader />
-      <main className="flex-1 flex items-center justify-center px-4 py-12">
-      <div className="auth-card w-full max-w-sm bg-white rounded-2xl border border-stone-100 p-8 shadow-sm">
+    <div className="min-h-screen product-page auth-page login-page flex bg-stone-50">
+      <main className="flex-1 flex items-center justify-center px-4 py-10">
+      <div className="auth-card login-card w-full bg-white border shadow-sm">
         <div className="auth-card__brand"><BrandLockup /></div>
 
-        <h1 className="text-xl font-medium text-center mb-2">邀请码登录</h1>
-        <p className="text-sm text-stone-500 text-center mb-6">
-          输入账号与邀请码，继续访问洄映
+        <h1>登录或注册</h1>
+        <p className="login-card__hint">
+          测试期使用邮箱 + 固定验证码 123456
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="code">邀请码</Label>
+        <form onSubmit={handleSubmit}>
+          <div className="login-field">
+            <Label htmlFor="identifier">邮箱 / 手机号</Label>
+            <Input
+              id="identifier"
+              type="text"
+              inputMode="email"
+              autoComplete="username"
+              placeholder="you@example.com 或 13800138000"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              required
+            />
+          </div>
+
+          <div className="login-field">
+            <Label htmlFor="code">验证码</Label>
             <Input
               id="code"
               type="text"
-              placeholder="请输入邀请码"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              placeholder="123456"
               value={code}
               onChange={(e) => setCode(e.target.value)}
               required
             />
           </div>
 
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p className="login-card__error">{error}</p>}
 
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "验证并进入"}
+          <Button type="submit" className="login-card__submit w-full" disabled={loading}>
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "继续"}
           </Button>
         </form>
 
-        <p className="text-xs text-stone-400 text-center mt-6">
-          邀请码仅限本人使用，请勿分享
+        <p className="login-card__legal">
+          登录即表示你同意我们的服务条款与隐私政策
         </p>
       </div>
       </main>
