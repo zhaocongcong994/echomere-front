@@ -36,6 +36,8 @@ export default function DeepReportPage() {
   const [deletingReportId, setDeletingReportId] = useState<string | null>(null);
   const [pendingRegenerate, setPendingRegenerate] = useState<Report | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  const [regeneratingReportId, setRegeneratingReportId] = useState<string | null>(null);
 
   async function fetchData() {
     try {
@@ -65,6 +67,7 @@ export default function DeepReportPage() {
       });
       if (res.ok) {
         setShowCreateDialog(false);
+        setSelectedProfileId(null);
         setPendingRegenerate(null);
         await fetchData();
       }
@@ -113,7 +116,7 @@ export default function DeepReportPage() {
             <h1 className="text-xl font-medium">深度报告</h1>
             <p className="text-sm text-stone-500">大运流年与五行分析，一览命运轨迹</p>
           </div>
-          <Button size="sm" onClick={() => setShowCreateDialog(true)}>
+          <Button size="sm" onClick={() => { setSelectedProfileId(null); setShowCreateDialog(true); }}>
             <Plus className="w-4 h-4" /> 新增报告
           </Button>
         </div>
@@ -201,10 +204,15 @@ export default function DeepReportPage() {
                     variant="outline"
                     size="sm"
                     className="flex-1"
-                    disabled={generatingProfileId === report.profileId}
+                    disabled={regeneratingReportId === report.id || generatingProfileId === report.profileId}
                     onClick={() => setPendingRegenerate(report)}
                   >
-                    <RotateCw className="w-4 h-4" /> 重新生成
+                    {regeneratingReportId === report.id || generatingProfileId === report.profileId ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <RotateCw className="w-4 h-4" />
+                    )}
+                    重新生成
                   </Button>
                   <Button
                     variant="ghost"
@@ -229,13 +237,28 @@ export default function DeepReportPage() {
       {showCreateDialog && (
         <div
           className="fixed inset-0 bg-black/20 z-50 flex items-center justify-center p-4"
-          onClick={() => setShowCreateDialog(false)}
+          onClick={() => { setShowCreateDialog(false); setSelectedProfileId(null); }}
         >
           <div
             className="bg-white rounded-2xl border border-stone-100 p-6 shadow-lg max-w-lg w-full max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-medium mb-2">生成深度报告</h2>
+            <div className="flex items-start justify-between mb-2">
+              <h2 className="text-lg font-medium">生成深度报告</h2>
+              {profiles.length > 0 && profiles.every((p) => reports.some((r) => r.profileId === p.id)) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setShowCreateDialog(false);
+                    setSelectedProfileId(null);
+                    router.push("/profiles");
+                  }}
+                >
+                  去创建档案
+                </Button>
+              )}
+            </div>
             <p className="text-sm text-stone-500 mb-4">选择一个档案，生成大运流年与五行分析报告。</p>
             <div className="space-y-3">
               {profiles.map((p) => {
@@ -246,10 +269,12 @@ export default function DeepReportPage() {
                     className={`w-full text-left rounded-xl p-4 transition-colors ${
                       hasReport
                         ? "bg-stone-100 text-stone-400 cursor-not-allowed"
+                        : selectedProfileId === p.id
+                        ? "ring-2 ring-stone-900 bg-stone-100"
                         : "bg-stone-50 hover:bg-stone-100"
                     }`}
-                    disabled={hasReport || generatingProfileId === p.id}
-                    onClick={() => generateReport(p.id)}
+                    disabled={hasReport}
+                    onClick={() => !hasReport && setSelectedProfileId(p.id)}
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -261,10 +286,10 @@ export default function DeepReportPage() {
                           <div className="text-xs text-stone-400 mt-1">已生成报告</div>
                         )}
                       </div>
-                      {generatingProfileId === p.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-stone-400" />
-                      ) : hasReport ? (
+                      {hasReport ? (
                         <span className="text-xs text-stone-400">不可选</span>
+                      ) : selectedProfileId === p.id ? (
+                        <span className="text-xs text-stone-900 font-medium">已选择</span>
                       ) : (
                         <Plus className="w-4 h-4 text-stone-400" />
                       )}
@@ -273,9 +298,19 @@ export default function DeepReportPage() {
                 );
               })}
             </div>
-            <div className="mt-4 flex justify-end">
-              <Button variant="ghost" onClick={() => setShowCreateDialog(false)}>
+            <div className="mt-4 flex justify-end gap-3">
+              <Button variant="ghost" onClick={() => { setShowCreateDialog(false); setSelectedProfileId(null); }}>
                 <ChevronLeft className="w-4 h-4" /> 取消
+              </Button>
+              <Button
+                disabled={!selectedProfileId || Boolean(generatingProfileId)}
+                onClick={() => selectedProfileId && generateReport(selectedProfileId)}
+              >
+                {generatingProfileId ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "确认"
+                )}
               </Button>
             </div>
           </div>
@@ -300,10 +335,17 @@ export default function DeepReportPage() {
                 取消
               </Button>
               <Button
-                disabled={generatingProfileId === pendingRegenerate.profileId}
-                onClick={() => generateReport(pendingRegenerate.profileId)}
+                disabled={regeneratingReportId === pendingRegenerate.id}
+                onClick={() => {
+                  setPendingRegenerate(null);
+                  setRegeneratingReportId(pendingRegenerate.id);
+                  window.setTimeout(() => {
+                    setRegeneratingReportId(null);
+                    generateReport(pendingRegenerate.profileId);
+                  }, 2000);
+                }}
               >
-                {generatingProfileId === pendingRegenerate.profileId ? (
+                {regeneratingReportId === pendingRegenerate.id ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   "确认"

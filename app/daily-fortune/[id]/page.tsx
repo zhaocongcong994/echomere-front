@@ -115,7 +115,7 @@ export default function DeepReportDetailPage() {
           <div>
             <h1 className="text-xl font-medium">深度报告</h1>
             <p className="text-sm text-stone-500">
-              {report.profileName || "未命名"} · {new Date(report.createdAt).toLocaleString("zh-CN")}
+              {report.profileName || "未命名"} · {new Date(report.updatedAt).toLocaleString("zh-CN")}
             </p>
           </div>
         </div>

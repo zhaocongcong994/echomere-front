@@ -24,6 +24,7 @@ export default function ProfilesPage() {
   const [newProfileId, setNewProfileId] = useState<string | null>(null);
   const [deletingProfileId, setDeletingProfileId] = useState<string | null>(null);
   const [selectingProfileId, setSelectingProfileId] = useState<string | null>(null);
+  const [pendingDeleteProfile, setPendingDeleteProfile] = useState<Profile | null>(null);
 
   async function fetchProfiles() {
     const res = await apiFetch("/profiles");
@@ -90,8 +91,9 @@ export default function ProfilesPage() {
     }
   };
 
-  const deleteProfile = async (id: string) => {
-    if (deletingProfileId) return;
+  const confirmDeleteProfile = async () => {
+    if (!pendingDeleteProfile || deletingProfileId) return;
+    const id = pendingDeleteProfile.id;
     setDeletingProfileId(id);
 
     try {
@@ -105,9 +107,8 @@ export default function ProfilesPage() {
         return;
       }
 
-      setProfiles((current) => current.filter((profile) => profile.id !== id));
-      if (newProfileId === id) setNewProfileId(null);
-      setDeletingProfileId(null);
+      setPendingDeleteProfile(null);
+      await fetchProfiles();
     } catch {
       setDeletingProfileId(null);
     }
@@ -174,7 +175,7 @@ export default function ProfilesPage() {
                     <Button variant="ghost" size="icon" aria-label="修改档案" onClick={(event) => { event.stopPropagation(); router.push(`/onboarding?profileMode=1&profileId=${encodeURIComponent(p.id)}&callbackUrl=/profiles`); }}>
                       <Pencil className="w-4 h-4 text-stone-400" />
                     </Button>
-                    <Button variant="ghost" size="icon" aria-label="删除档案" disabled={Boolean(deletingProfileId)} onClick={(event) => { event.stopPropagation(); deleteProfile(p.id); }}>
+                    <Button variant="ghost" size="icon" aria-label="删除档案" disabled={Boolean(deletingProfileId)} onClick={(event) => { event.stopPropagation(); setPendingDeleteProfile(p); }}>
                       {p.id === deletingProfileId ? <Loader2 className="w-4 h-4 animate-spin text-stone-400" /> : <Trash2 className="w-4 h-4 text-stone-400" />}
                     </Button>
                   </div>
@@ -197,6 +198,44 @@ export default function ProfilesPage() {
           })}
         </div>
       </main>
+
+      {pendingDeleteProfile && (
+        <div
+          className="fixed inset-0 bg-black/20 z-50 flex items-center justify-center p-4"
+          onClick={() => !deletingProfileId && setPendingDeleteProfile(null)}
+        >
+          <div
+            className="bg-white rounded-2xl border border-stone-100 p-6 shadow-lg max-w-sm w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-medium mb-2">确认删除档案？</h2>
+            <p className="text-sm text-stone-500 mb-4">
+              删除档案「{pendingDeleteProfile.name || "未命名"}」后，关联的深度报告也会同步被删除，此操作无法恢复。
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button
+                variant="ghost"
+                disabled={Boolean(deletingProfileId)}
+                onClick={() => setPendingDeleteProfile(null)}
+              >
+                取消
+              </Button>
+              <Button
+                variant="destructive"
+                disabled={Boolean(deletingProfileId)}
+                onClick={confirmDeleteProfile}
+              >
+                {deletingProfileId === pendingDeleteProfile.id ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> 删除中</>
+                ) : (
+                  "确认删除"
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <BottomDock />
     </div>
   );
