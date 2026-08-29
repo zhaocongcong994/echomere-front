@@ -31,6 +31,14 @@ interface DayunItem {
   }>;
 }
 
+interface ChineseDayunItem {
+  起运年份?: number;
+  起运年龄?: number;
+  干支?: string;
+  十神?: string;
+  藏干?: Array<{ 天干?: string; 十神?: string }>;
+}
+
 interface ReportContent {
   dayun?: {
     direction?: string;
@@ -39,6 +47,9 @@ interface ReportContent {
     dayun?: DayunItem[];
     tongyun?: DayunItem[];
     list?: DayunItem[];
+    起运信息?: { 起运年龄?: number; 起运详情?: string };
+    大运列表?: ChineseDayunItem[];
+    童运列表?: ChineseDayunItem[];
   };
   wuxingAnalysis?: WuxingAnalysis;
 }
@@ -97,7 +108,8 @@ export default function DeepReportDetailPage() {
   const content = report.content;
   const wuxing = content?.wuxingAnalysis;
   const dayun = content?.dayun;
-  const dayunList = dayun?.list || dayun?.dayun || [];
+  const dayunList: Array<DayunItem | ChineseDayunItem> =
+    dayun?.list || dayun?.dayun || dayun?.大运列表 || [];
 
   return (
     <div className="min-h-screen product-page deep-report-detail-page bg-stone-50">
@@ -163,37 +175,44 @@ export default function DeepReportDetailPage() {
 
             {dayunList.length > 0 && (
               <div className="space-y-3">
-                {dayunList.map((item, index) => (
-                  <div
-                    key={index}
-                    className="p-4 rounded-xl bg-stone-50 border border-stone-100"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="font-medium text-base">
-                        {item.ganZhi || "—"}
-                        {item.tenGod && (
-                          <span className="text-sm text-stone-500 ml-2">{item.tenGod}</span>
-                        )}
+                {dayunList.map((item, index) => {
+                  const isChinese = "干支" in item;
+                  const ganZhi = isChinese ? item.干支 : item.ganZhi;
+                  const tenGod = isChinese ? item.十神 : item.tenGod;
+                  const startYear = isChinese ? item.起运年份 : item.startYear;
+                  const startAge = isChinese ? item.起运年龄 : item.startAge;
+                  return (
+                    <div
+                      key={index}
+                      className="p-4 rounded-xl bg-stone-50 border border-stone-100"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="font-medium text-base">
+                          {ganZhi || "—"}
+                          {tenGod && (
+                            <span className="text-sm text-stone-500 ml-2">{tenGod}</span>
+                          )}
+                        </div>
+                        <div className="text-xs text-stone-400">
+                          {startYear !== undefined && `${startYear} 年起`}
+                          {startAge !== undefined && ` · ${startAge} 岁`}
+                        </div>
                       </div>
-                      <div className="text-xs text-stone-400">
-                        {item.startYear !== undefined && `${item.startYear} 年起`}
-                        {item.startAge !== undefined && ` · ${item.startAge} 岁`}
-                      </div>
+                      {!isChinese && item.liunianList && item.liunianList.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {item.liunianList.slice(0, 10).map((ly) => (
+                            <span
+                              key={ly.year}
+                              className="text-xs px-2 py-1 rounded bg-white border border-stone-100 text-stone-600"
+                            >
+                              {ly.year} {ly.ganZhi}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    {item.liunianList && item.liunianList.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {item.liunianList.slice(0, 10).map((ly) => (
-                          <span
-                            key={ly.year}
-                            className="text-xs px-2 py-1 rounded bg-white border border-stone-100 text-stone-600"
-                          >
-                            {ly.year} {ly.ganZhi}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </section>
