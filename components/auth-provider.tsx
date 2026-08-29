@@ -75,11 +75,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(newUser);
   };
 
-  const logout = () => {
-    clearAuthToken();
-    setToken(null);
-    setUser(null);
-    router.push("/login");
+  const logout = async () => {
+    try {
+      await apiFetch("/auth/logout", { method: "POST" });
+    } catch (e) {
+      console.error("[auth] logout request failed", e);
+    } finally {
+      clearAuthToken();
+      setToken(null);
+      setUser(null);
+      router.push("/login");
+    }
   };
 
   return (

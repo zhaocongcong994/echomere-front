@@ -72,7 +72,7 @@ export default function ProfilesPage() {
     setSubmitting(true);
     const res = await apiFetch("/profiles", {
       method: "POST",
-      body: JSON.stringify({ ...form, isPrimary: true }),
+      body: JSON.stringify(form),
     });
     setSubmitting(false);
     if (res.ok) {
