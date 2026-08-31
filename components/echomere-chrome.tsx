@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarDays, Compass, CreditCard, MessageCircle, UserRound } from "lucide-react";
 
@@ -10,7 +9,7 @@ export function EchoMark() {
 
 export function BrandLockup({ href = "/", compact = false }: { href?: string; compact?: boolean }) {
   return (
-    <Link className={`echo-brand${compact ? " echo-brand--compact" : ""}`} href={href} aria-label="EchoMere 洄映首页">
+    <a className={`echo-brand${compact ? " echo-brand--compact" : ""}`} href={href} aria-label="EchoMere 洄映首页">
       <span className="echo-brand__row">
         <EchoMark />
         <strong>EchoMere</strong>
@@ -18,7 +17,7 @@ export function BrandLockup({ href = "/", compact = false }: { href?: string; co
         <em>洄映</em>
       </span>
       <small>ECHO · WATER · MERE</small>
-    </Link>
+    </a>
   );
 }
 
@@ -47,10 +46,10 @@ export function BottomDock({ active }: { active?: string }) {
         const Icon = item.icon;
         const selected = active ? active === item.href : pathname.startsWith(item.href);
         return (
-          <Link key={item.href} href={item.href} className={selected ? "is-active" : ""} aria-current={selected ? "page" : undefined} aria-label={item.label}>
+          <a key={item.href} href={item.href} className={selected ? "is-active" : ""} aria-current={selected ? "page" : undefined} aria-label={item.label}>
             <Icon aria-hidden="true" strokeWidth={1.45} />
             <span>{item.label}</span>
-          </Link>
+          </a>
         );
       })}
     </nav>

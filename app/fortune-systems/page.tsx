@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { BadgeCent, Coins, Compass, Flower2, MoonStar, Sparkles } from "lucide-react";
 import { BottomDock, ProductHeader } from "@/components/echomere-chrome";
@@ -118,7 +117,7 @@ export default function FortuneSystemsPage() {
         </section>
 
         {selectedSystem.available ? (
-          <Link className="fortune-system-cta" href="/daily-fortune">生成深度报告 <span aria-hidden="true">↗</span></Link>
+          <a className="fortune-system-cta" href="/daily-fortune">生成深度报告 <span aria-hidden="true">↗</span></a>
         ) : (
           <button className="fortune-system-cta is-disabled" type="button" disabled>{selectedSystem.name} · 即将推出</button>
         )}

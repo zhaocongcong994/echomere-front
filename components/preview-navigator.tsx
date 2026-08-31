@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { LayoutGrid, X } from "lucide-react";
@@ -36,9 +35,9 @@ export function PreviewNavigator() {
         <nav>
           <p>LOCAL UI PREVIEW</p>
           {pages.map(([label, href]) => (
-            <Link key={href} href={href} className={pathname === href ? "is-active" : ""} onClick={() => setOpen(false)}>
+            <a key={href} href={href} className={pathname === href ? "is-active" : ""} onClick={() => setOpen(false)}>
               <span>{label}</span><small>{href}</small>
-            </Link>
+            </a>
           ))}
         </nav>
       )}
