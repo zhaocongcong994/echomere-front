@@ -2,12 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { BadgeCent, CircleDot, Coins, Compass, Flower2, MoonStar, Orbit, Sparkles } from "lucide-react";
+import { BadgeCent, Coins, Compass, Flower2, MoonStar, Sparkles } from "lucide-react";
 import { BottomDock, ProductHeader } from "@/components/echomere-chrome";
 
 const systems = [
-  { name: "八字运势", detail: "东方命理 · 天干地支", icon: CircleDot, available: true },
-  { name: "紫微斗数", detail: "帝王之术 · 十二宫位", icon: Orbit },
   { name: "塔罗占卜", detail: "西方神秘学 · 牌阵解读", icon: Sparkles },
   { name: "梅花易数", detail: "心易占卜 · 象数推演", icon: Flower2 },
   { name: "六爻占卦", detail: "周易正宗 · 铜钱起卦", icon: Coins },

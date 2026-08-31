@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Fragment, Suspense, useEffect, useRef, useState, type ReactNode } from "react";
 import { useAuth } from "@/components/auth-provider";
 import { apiFetch } from "@/lib/api";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -14,24 +14,31 @@ import {
   ThumbsUp,
   ThumbsDown,
   Loader2,
-  ChevronDown,
-  ChevronUp,
   Home,
   ArrowUp,
   PanelLeftClose,
   PanelLeftOpen,
   Trash2,
   LogOut,
+  FileText,
+  ChevronDown,
 } from "lucide-react";
 import { BottomDock, BrandLockup, EchoMark } from "@/components/echomere-chrome";
 
 const RECOMMENDED_QUESTIONS = [
-  "天生适合做什么",
-  "分析一下我今年的年度运势",
-  "最近压力好大",
-  "这个 offer 该不该接",
-  "我的桃花运怎么样",
-  "今年适合换工作吗",
+  "今年适合换个方向吗",
+  "野心与天性是否同路",
+  "怎样找回生活节奏",
+  "怎样活得更像自己",
+  "如何停止反复内耗",
+];
+
+const REPORT_QUESTIONS = [
+  "请先概括整份报告",
+  "解读五行结构与喜忌",
+  "解读当前大运阶段",
+  "解读事业与方向",
+  "我想重点问：",
 ];
 
 interface Message {
@@ -50,6 +57,162 @@ interface Conversation {
   updatedAt: string;
 }
 
+interface ReportChatContext {
+  id: string;
+  profileName: string;
+  title: string;
+  status: string;
+  content?: unknown;
+}
+
+function renderInlineText(text: string): ReactNode[] {
+  return text.split(/(\*\*[^*]+\*\*)/g).filter(Boolean).map((part, index) =>
+    part.startsWith("**") && part.endsWith("**")
+      ? <strong key={`${part}-${index}`}>{part.slice(2, -2)}</strong>
+      : <Fragment key={`${part}-${index}`}>{part}</Fragment>
+  );
+}
+
+function extractThinkingSummary(content: string): string | undefined {
+  return content.match(/\[思考摘要[:：]([^\]]+)\]/)?.[1]?.trim();
+}
+
+function getVisibleThinkingSteps(message: Message, isStreaming: boolean): string[] {
+  const steps = ["理解问题：识别你关注的主题与时间范围"];
+  let toolNames: string[] = [];
+
+  if (message.toolCalls) {
+    try {
+      toolNames = (JSON.parse(message.toolCalls) as Array<{ name?: string }>)
+        .map((call) => call.name || "")
+        .filter(Boolean);
+    } catch {
+      toolNames = [];
+    }
+  }
+
+  if (toolNames.includes("查询命盘")) steps.push("读取命盘：核对日主、五行与原局结构");
+  if (toolNames.includes("查询时间流")) steps.push("对照时间：结合当前大运与流年变化");
+  if (toolNames.includes("读取深度报告")) steps.push("读取报告：提取你指定部分的关键结论");
+  if (toolNames.includes("起卦服务")) steps.push("校验卦象：对照本卦、变卦与动爻关系");
+
+  steps.push(isStreaming ? "组织回答：正在提炼结论、依据与建议" : "完成整理：以结论、依据和行动建议呈现");
+  return steps;
+}
+
+function ThinkingDisclosure({ message, isStreaming }: { message: Message; isStreaming: boolean }) {
+  const [expanded, setExpanded] = useState(true);
+  const steps = getVisibleThinkingSteps(message, isStreaming);
+  const contentId = `thinking-${message.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+
+  return (
+    <section className={`chat-thinking${isStreaming ? " is-active" : ""}`}>
+      <button
+        type="button"
+        className="chat-thinking__toggle"
+        aria-expanded={expanded}
+        aria-controls={contentId}
+        onClick={() => setExpanded((value) => !value)}
+      >
+        <span className="chat-thinking__pulse" aria-hidden="true" />
+        <span>{isStreaming ? "深度思考中" : "已完成思考"}</span>
+        <ChevronDown className={expanded ? "is-expanded" : ""} aria-hidden="true" />
+      </button>
+
+      <div id={contentId} className="chat-thinking__body" hidden={!expanded} aria-live="polite">
+        <p className="chat-thinking__summary">{message.thinkingSummary}</p>
+        <ul className="chat-thinking__steps">
+          {steps.map((step, index) => (
+            <li key={step} className={index === steps.length - 1 && isStreaming ? "is-current" : ""}>
+              <span aria-hidden="true" />
+              <p>{step}</p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+function ChatMessageContent({ content }: { content: string }) {
+  const normalizedContent = content
+    .replace(/```(?:markdown)?/gi, "")
+    .replace(/\[(?:命盘卡片|思考摘要|工具卡片)[:：][^\]]+\]\s*/g, "")
+    .replace(/\s*([一二三四五六七八九十]+、[^：\n]{1,18})[:：]\s*/g, "\n\n## $1\n\n")
+    .replace(/\s*依据[:：]\s*/g, "\n\n> 依据：")
+    .replace(/\s+(?=命理分析因人而异)/g, "\n\n> ")
+    .trim();
+  const lines = normalizedContent.replace(/\r/g, "").split("\n");
+  const blocks: ReactNode[] = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index].trim();
+    if (!line) {
+      index += 1;
+      continue;
+    }
+
+    const heading = line.match(/^(#{1,3})\s+(.+)$/);
+    if (heading) {
+      const Tag = `h${heading[1].length}` as "h1" | "h2" | "h3";
+      blocks.push(<Tag key={`heading-${index}`}>{renderInlineText(heading[2])}</Tag>);
+      index += 1;
+      continue;
+    }
+
+    if (/^[-*_]{3,}$/.test(line)) {
+      blocks.push(<hr key={`rule-${index}`} />);
+      index += 1;
+      continue;
+    }
+
+    if (line.startsWith("> ")) {
+      const quote: string[] = [];
+      while (index < lines.length && lines[index].trim().startsWith("> ")) {
+        quote.push(lines[index].trim().slice(2));
+        index += 1;
+      }
+      blocks.push(<blockquote key={`quote-${index}`}>{renderInlineText(quote.join(" "))}</blockquote>);
+      continue;
+    }
+
+    if (/^[-*]\s+/.test(line)) {
+      const items: string[] = [];
+      while (index < lines.length && /^[-*]\s+/.test(lines[index].trim())) {
+        items.push(lines[index].trim().replace(/^[-*]\s+/, ""));
+        index += 1;
+      }
+      blocks.push(<ul key={`list-${index}`}>{items.map((item, itemIndex) => <li key={itemIndex}>{renderInlineText(item)}</li>)}</ul>);
+      continue;
+    }
+
+    if (/^\d+[.、]\s*/.test(line)) {
+      const items: string[] = [];
+      while (index < lines.length && /^\d+[.、]\s*/.test(lines[index].trim())) {
+        items.push(lines[index].trim().replace(/^\d+[.、]\s*/, ""));
+        index += 1;
+      }
+      blocks.push(<ol key={`ordered-${index}`}>{items.map((item, itemIndex) => <li key={itemIndex}>{renderInlineText(item)}</li>)}</ol>);
+      continue;
+    }
+
+    const paragraph: string[] = [line];
+    index += 1;
+    while (
+      index < lines.length && lines[index].trim() &&
+      !/^(#{1,3})\s+/.test(lines[index].trim()) &&
+      !/^([-*]\s+|\d+[.、]\s*|>\s+|[-*_]{3,}$)/.test(lines[index].trim())
+    ) {
+      paragraph.push(lines[index].trim());
+      index += 1;
+    }
+    blocks.push(<p key={`paragraph-${index}`}>{renderInlineText(paragraph.join(" "))}</p>);
+  }
+
+  return <div className="chat-message-content">{blocks}</div>;
+}
+
 function ChatContent() {
   const { user, loading: authLoading, logout } = useAuth();
   const router = useRouter();
@@ -60,14 +223,18 @@ function ChatContent() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeProfileName, setActiveProfileName] = useState("");
+  const [reportContext, setReportContext] = useState<ReportChatContext | null>(null);
+  const [reportContextLoading, setReportContextLoading] = useState(false);
+  const [reportContextError, setReportContextError] = useState("");
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [expandedThinking, setExpandedThinking] = useState<string | null>(null);
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
   const [deletingConversationId, setDeletingConversationId] = useState<string | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Conversation | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!authLoading && !user) router.push("/login");
@@ -115,6 +282,33 @@ function ChatContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, user, router]);
 
+  useEffect(() => {
+    const reportId = searchParams.get("reportId");
+    if (!reportId || !user) return;
+
+    let cancelled = false;
+    setReportContextLoading(true);
+    setReportContextError("");
+    apiFetch(`/reports/${encodeURIComponent(reportId)}`)
+      .then(async (res) => {
+        if (!res.ok) throw new Error("报告读取失败");
+        return res.json();
+      })
+      .then((data: ReportChatContext) => {
+        if (cancelled) return;
+        setReportContext(data);
+        setMode("kanyun");
+      })
+      .catch(() => {
+        if (!cancelled) setReportContextError("这份报告暂时无法读取，请返回报告页重试。");
+      })
+      .finally(() => {
+        if (!cancelled) setReportContextLoading(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [searchParams, user]);
+
   async function fetchConversations() {
     const res = await apiFetch("/conversations");
     if (res.ok) {
@@ -144,6 +338,7 @@ function ChatContent() {
     setMessages(
       data.messages.map((m: Message) => ({
         ...m,
+        thinkingSummary: extractThinkingSummary(m.content) || m.thinkingSummary,
         routeReason: m.toolCalls ? extractRouteReason(m.toolCalls) : undefined,
       }))
     );
@@ -154,6 +349,17 @@ function ChatContent() {
     setCurrentConversationId(null);
     setMessages([]);
     setMode("suiyuan");
+    setReportContext(null);
+    setReportContextError("");
+    router.replace("/chat");
+  };
+
+  const fillRecommendedQuestion = (question: string) => {
+    setInput(question);
+    window.requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      inputRef.current?.setSelectionRange(question.length, question.length);
+    });
   };
 
   const handleLogout = () => {
@@ -198,12 +404,20 @@ function ChatContent() {
     setLoading(true);
     setInput("");
 
+    const requestStartedAt = Date.now();
     const userMessage: Message = {
-      id: `tmp-${Date.now()}`,
+      id: `tmp-${requestStartedAt}`,
       role: "user",
       content: text,
     };
-    setMessages((prev) => [...prev, userMessage]);
+    const assistantMessage: Message = {
+      id: `assistant-${requestStartedAt}`,
+      role: "assistant",
+      content: "",
+      thinkingSummary: "正在理解你的问题，并确认需要关注的重点。",
+    };
+    setMessages((prev) => [...prev, userMessage, assistantMessage]);
+    setStreamingMessageId(assistantMessage.id);
 
     try {
       const res = await apiFetch("/chat/stream", {
@@ -212,39 +426,37 @@ function ChatContent() {
           mode,
           message: text,
           conversationId: currentConversationId,
+          reportId: reportContext?.id || undefined,
         }),
       });
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({ error: "请求失败" }));
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `err-${Date.now()}`,
-            role: "assistant",
-            content:
-              err.error === "NO_PROFILE"
-                ? "看运需要先建立命盘档案，请先去设置页创建。"
-                : `请求失败：${err.error || "未知错误"}`,
-          },
-        ]);
-        setLoading(false);
+        setMessages((prev) => prev.map((message) =>
+          message.id === assistantMessage.id
+            ? {
+                ...message,
+                thinkingSummary: undefined,
+                content:
+                  err.error === "NO_PROFILE"
+                    ? "看运需要先建立命盘档案，请先去设置页创建。"
+                    : `请求失败：${err.error || "未知错误"}`,
+              }
+            : message
+        ));
         return;
       }
 
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
-      const assistantMessage: Message = {
-        id: `assistant-${Date.now()}`,
-        role: "assistant",
-        content: "",
-        thinkingSummary: "思考了片刻",
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
 
       if (!reader) {
-        setLoading(false);
+        setMessages((prev) => prev.map((message) =>
+          message.id === assistantMessage.id
+            ? { ...message, thinkingSummary: undefined, content: "暂时没有收到回答，请重试。" }
+            : message
+        ));
         return;
       }
 
@@ -268,11 +480,19 @@ function ChatContent() {
             setCurrentConversationId(data.conversationId);
             assistantMessage.toolCalls = JSON.stringify(data.toolCalls);
             assistantMessage.routeReason = data.routeReason;
+            assistantMessage.thinkingSummary = reportContext
+              ? "正在读取这份报告，并提取与你的问题最相关的内容。"
+              : "已经理解问题，正在读取相关信息并整理回答结构。";
+            setMessages((prev) =>
+              prev.map((m) => (m.id === assistantMessage.id ? { ...assistantMessage } : m))
+            );
             fetchConversations();
           }
 
           if (event === "chunk") {
             assistantMessage.content += data.content || "";
+            const summary = extractThinkingSummary(assistantMessage.content);
+            assistantMessage.thinkingSummary = summary || "信息已整理完成，正在生成简洁、清晰的回答。";
             setMessages((prev) =>
               prev.map((m) => (m.id === assistantMessage.id ? { ...assistantMessage } : m))
             );
@@ -280,15 +500,13 @@ function ChatContent() {
         }
       }
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `err-${Date.now()}`,
-          role: "assistant",
-          content: "网络异常，请重试。",
-        },
-      ]);
+      setMessages((prev) => prev.map((message) =>
+        message.id === assistantMessage.id
+          ? { ...message, thinkingSummary: undefined, content: "网络异常，请重试。" }
+          : message
+      ));
     } finally {
+      setStreamingMessageId(null);
       setLoading(false);
     }
   }
@@ -300,80 +518,6 @@ function ChatContent() {
       </div>
     );
   }
-
-  const renderToolCalls = (msg: Message) => {
-    if (!msg.toolCalls) return null;
-    try {
-      const calls = JSON.parse(msg.toolCalls) as Array<{
-        name: string;
-        parameters?: unknown;
-        result?: {
-          ganZhi?: string;
-          shiShen?: string;
-          naYin?: string;
-          year?: number;
-          originalName?: string;
-          changedName?: string;
-          originalNumber?: number;
-          changedNumber?: number;
-          changingYaos?: number[];
-          yaos?: Array<{ index: number; type: string; yin: boolean; changing: boolean }>;
-        };
-      }>;
-
-      const kanyunCalls = calls.filter((c) => c.name === "查询命盘" || c.name === "查询时间流");
-      const hexagramCall = calls.find((c) => c.name === "起卦服务");
-
-      return (
-        <div className="space-y-2 my-3">
-          {msg.routeReason && (
-            <div className="bg-blue-50 border border-blue-100 rounded-lg px-4 py-2 text-sm text-blue-700">
-              {msg.routeReason}
-            </div>
-          )}
-
-          {kanyunCalls.map((call, i) => (
-            <div key={i} className="bg-stone-50 border border-stone-100 rounded-lg px-4 py-2 text-sm">
-              <div className="font-medium text-stone-700">{call.name}</div>
-              {call.name === "查询时间流" && call.result && (
-                <div className="text-stone-500 text-xs mt-1">
-                  {call.result.year}年流年{call.result.ganZhi}{call.result.shiShen}
-                  {call.result.naYin}
-                </div>
-              )}
-            </div>
-          ))}
-
-          {hexagramCall && hexagramCall.result && (
-            <div className="bg-stone-50 border border-stone-100 rounded-lg px-4 py-3 text-sm">
-              <div className="font-medium text-stone-700 mb-2">
-                起卦结果：{hexagramCall.result.originalName}（第 {hexagramCall.result.originalNumber} 卦）
-                {hexagramCall.result.changingYaos && hexagramCall.result.changingYaos.length > 0 && (
-                  <span className="text-stone-500 ml-2">
-                    → 变卦 {hexagramCall.result.changedName}，动爻 {hexagramCall.result.changingYaos.join(", ")}
-                  </span>
-                )}
-              </div>
-              <div className="flex gap-2 text-xs">
-                {hexagramCall.result.yaos?.map((y) => (
-                  <div
-                    key={y.index}
-                    className={`px-2 py-1 rounded ${
-                      y.changing ? "bg-stone-200 text-stone-800" : "bg-white text-stone-500"
-                    }`}
-                  >
-                    {y.index}爻 {y.type}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    } catch {
-      return null;
-    }
-  };
 
   return (
     <div className="chat-page h-screen flex bg-white">
@@ -515,6 +659,61 @@ function ChatContent() {
 
         <div className="flex-1 overflow-y-auto">
           {messages.length === 0 ? (
+            reportContextLoading ? (
+              <div className="chat-report-loading" role="status">
+                <Loader2 className="animate-spin" />
+                <span>正在读取深度报告…</span>
+              </div>
+            ) : reportContext ? (
+              <div className="chat-report-handoff">
+                <div className="chat-report-handoff__icon" aria-hidden="true"><FileText /></div>
+                <p className="chat-report-handoff__eyebrow">REPORT READY</p>
+                <h1>报告已读取</h1>
+                <p className="chat-report-handoff__source">
+                  《{reportContext.title || "八字深度报告"}》 · {reportContext.profileName || "当前档案"}
+                </p>
+                <p className="chat-report-handoff__question">
+                  你想先解读哪一部分？我会在你确认后，只分析你关心的内容。
+                </p>
+
+                <div className="chat-report-options" aria-label="可选的报告解读方向">
+                  {REPORT_QUESTIONS.map((question) => (
+                    <button key={question} type="button" onClick={() => fillRecommendedQuestion(question)}>
+                      {question}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="chat-report-composer">
+                  <div className="relative chat-composer">
+                    <Input
+                      ref={inputRef}
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      placeholder="选择一个方向，或输入你想问的具体问题…"
+                      className="h-12 pr-14 rounded-full chat-composer-input"
+                      onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
+                      disabled={loading}
+                    />
+                    <Button
+                      size="icon"
+                      className="absolute right-1 top-1/2 -translate-y-1/2 chat-composer-send"
+                      onClick={() => sendMessage(input)}
+                      disabled={loading || !input.trim()}
+                      aria-label="确认并开始解读"
+                    >
+                      <ArrowUp className="w-[17px] h-[17px]" strokeWidth={1.45} />
+                    </Button>
+                  </div>
+                  <p>选择后仍可修改，发送即代表确认开始解读。</p>
+                </div>
+              </div>
+            ) : reportContextError ? (
+              <div className="chat-report-loading" role="alert">
+                <FileText />
+                <span>{reportContextError}</span>
+              </div>
+            ) : (
             <div className="chat-empty-state h-full flex flex-col items-center justify-center px-4 text-center">
               <h1 className="text-3xl md:text-5xl font-light">
                 {activeProfileName || "你好"}
@@ -527,6 +726,7 @@ function ChatContent() {
               <div className="chat-empty-composer w-full max-w-2xl">
                 <div className="relative chat-composer">
                   <Input
+                    ref={inputRef}
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="心有所问，洄映为答…"
@@ -549,7 +749,7 @@ function ChatContent() {
                 {RECOMMENDED_QUESTIONS.map((q, index) => (
                   <button
                     key={`${q}-${index}`}
-                    onClick={() => sendMessage(q)}
+                    onClick={() => fillRecommendedQuestion(q)}
                     className="px-4 py-2 rounded-full bg-stone-50 border border-stone-100 text-sm text-stone-600 hover:bg-stone-100"
                   >
                     {q}
@@ -557,63 +757,47 @@ function ChatContent() {
                 ))}
               </div>
             </div>
+            )
           ) : (
-            <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+            <div className="chat-thread">
               {messages.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[90%] md:max-w-[80%] rounded-2xl px-5 py-3 text-sm leading-relaxed ${
-                      msg.role === "user"
-                        ? "bg-stone-900 text-white"
-                        : "bg-stone-50 text-stone-800 border border-stone-100"
-                    }`}
-                  >
+                <article key={msg.id} className={`chat-message chat-message--${msg.role}`}>
+                  <div className="chat-message__surface">
                     {msg.role === "assistant" && (
-                      <div className="chat-answer-brand mb-2 text-stone-400">
+                      <div className="chat-answer-brand">
                         <EchoMark />
                         <span>洄映</span>
                       </div>
                     )}
 
                     {msg.role === "assistant" && msg.thinkingSummary && (
-                      <div className="mb-3">
-                        <button
-                          onClick={() => setExpandedThinking(expandedThinking === msg.id ? null : msg.id)}
-                          className="flex items-center gap-1 text-xs text-stone-400 hover:text-stone-600"
-                        >
-                          {expandedThinking === msg.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                          思考了片刻
-                        </button>
-                        {expandedThinking === msg.id && (
-                          <div className="mt-1 text-xs text-stone-400 bg-white rounded p-2 border border-stone-100">
-                            {msg.thinkingSummary}
-                          </div>
-                        )}
-                      </div>
+                      <ThinkingDisclosure
+                        message={msg}
+                        isStreaming={streamingMessageId === msg.id}
+                      />
                     )}
 
-                    {msg.role === "assistant" && renderToolCalls(msg)}
-
-                    <div className="whitespace-pre-wrap">{msg.content}</div>
+                    {msg.role === "assistant"
+                      ? <ChatMessageContent content={msg.content} />
+                      : <div className="chat-user-copy">{msg.content}</div>}
 
                     {msg.role === "assistant" && msg.content && (
-                      <div className="flex items-center gap-2 mt-3 pt-2 border-t border-stone-200/60">
-                        <button className="text-stone-400 hover:text-stone-600">
-                          <ThumbsUp className="w-3.5 h-3.5" />
+                      <div className="chat-message-actions">
+                        <button type="button" aria-label="回答有帮助">
+                          <ThumbsUp />
                         </button>
-                        <button className="text-stone-400 hover:text-stone-600">
-                          <ThumbsDown className="w-3.5 h-3.5" />
+                        <button type="button" aria-label="回答需要改进">
+                          <ThumbsDown />
                         </button>
                       </div>
                     )}
                   </div>
-                </div>
+                </article>
               ))}
-              {loading && (
-                <div className="flex justify-start">
-                  <div className="bg-stone-50 border border-stone-100 rounded-2xl px-5 py-3 text-sm text-stone-400 flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin" /> 洄映正在思考…
-                  </div>
+              {loading && !streamingMessageId && (
+                <div className="chat-awaiting" role="status">
+                  <span aria-hidden="true" />
+                  <span>洄映正在思考</span>
                 </div>
               )}
               <div ref={bottomRef} />
@@ -629,6 +813,7 @@ function ChatContent() {
               <div className="max-w-3xl mx-auto">
                 <div className="relative chat-composer">
                   <Input
+                    ref={inputRef}
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder="心有所问，洄映为答…"

@@ -173,10 +173,11 @@ export default function DeepReportPage() {
             {reports.map((report) => (
               <div
                 key={report.id}
-                className="bg-white rounded-2xl border border-stone-100 p-5 shadow-sm relative group"
+                className="report-card-interactive bg-white rounded-2xl border border-stone-100 p-5 shadow-sm relative group"
               >
-                <div
-                  className="cursor-pointer"
+                <button
+                  type="button"
+                  className="report-card-open w-full cursor-pointer text-left"
                   onClick={() => handleCardClick(report)}
                 >
                   <div className="flex items-center justify-between">
@@ -203,7 +204,7 @@ export default function DeepReportPage() {
                   <p className="text-xs text-stone-400 mt-3">
                     更新时间：{new Date(report.updatedAt).toLocaleString("zh-CN")}
                   </p>
-                </div>
+                </button>
 
                 <div className="flex items-center gap-2 mt-4 pt-4 border-t border-stone-50">
                   <Button

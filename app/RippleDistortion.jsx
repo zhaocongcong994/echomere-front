@@ -203,7 +203,8 @@ const RippleDistortion = ({
 
     let disposed = false;
     const image = new window.Image();
-    image.crossOrigin = 'anonymous';
+    const imageUrl = new URL(src, window.location.href);
+    if (imageUrl.origin !== window.location.origin) image.crossOrigin = 'anonymous';
     image.decoding = 'async';
     image.onload = () => {
       if (disposed) return;

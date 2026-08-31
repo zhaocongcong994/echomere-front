@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Loader2, ChevronLeft } from "lucide-react";
+import { Loader2, ChevronLeft, MessageCircleMore } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { ProductHeader } from "@/components/echomere-chrome";
 
@@ -107,58 +107,78 @@ export default function DeepReportDetailPage() {
     <div className="min-h-screen product-page deep-report-detail-page bg-stone-50">
       <ProductHeader />
 
-      <main className="max-w-3xl mx-auto px-4 py-8">
-        <div className="flex items-center gap-3 mb-6">
-          <Button variant="ghost" size="icon" onClick={() => router.push("/daily-fortune")}>
-            <ChevronLeft className="w-5 h-5" />
-          </Button>
-          <div>
-            <h1 className="text-xl font-medium">深度报告</h1>
-            <p className="text-sm text-stone-500">
-              {report.profileName || "未命名"} · {new Date(report.updatedAt).toLocaleString("zh-CN")}
+      <main className="deep-report-detail-shell">
+        <header className="deep-report-detail-hero">
+          <button
+            type="button"
+            className="deep-report-back"
+            onClick={() => router.push("/daily-fortune")}
+            aria-label="返回深度报告列表"
+          >
+            <ChevronLeft />
+            <span>返回报告</span>
+          </button>
+          <div className="deep-report-title-block">
+            <p className="deep-report-eyebrow">PERSONAL DESTINY REPORT</p>
+            <h1>{report.title || "八字深度报告"}</h1>
+            <p className="deep-report-meta">
+              {report.profileName || "未命名"}<span aria-hidden="true">·</span>
+              更新于 {new Date(report.updatedAt).toLocaleString("zh-CN")}
             </p>
           </div>
-        </div>
+          {content && (
+            <Button
+              className="deep-report-interpret"
+              onClick={() => router.push(`/chat?reportId=${encodeURIComponent(report.id)}`)}
+            >
+              <MessageCircleMore />
+              帮我解读
+            </Button>
+          )}
+        </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <div className="deep-report-content-grid">
           {wuxing && (
-            <section className="bg-white rounded-2xl border border-stone-100 p-6 shadow-sm">
-              <h2 className="text-lg font-medium mb-4">五行分析</h2>
-              <div className="grid grid-cols-5 gap-3 mb-4">
+            <section className="deep-report-section">
+              <div className="deep-report-section-heading">
+                <span>01</span>
+                <div><p>ELEMENT BALANCE</p><h2>五行分析</h2></div>
+              </div>
+              <div className="deep-report-elements">
                 {wuxing.ranking?.map((item) => (
                   <div
                     key={item.element}
-                    className="text-center p-3 rounded-xl bg-stone-50 border border-stone-100"
+                    className="deep-report-element"
                   >
-                    <div className="text-2xl font-medium">{item.element}</div>
-                    <div className="text-xs text-stone-500 mt-1">{item.score}</div>
+                    <strong>{item.element}</strong>
+                    <span>{item.score}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="space-y-4 text-sm text-stone-600">
-                <div className="p-4 rounded-xl bg-stone-50 border border-stone-100 space-y-2">
-                  <p className="font-medium">命局概览</p>
-                  <p className="leading-relaxed">{wuxing.overview}</p>
+              <div className="deep-report-prose-groups">
+                <div className="deep-report-prose-group">
+                  <h3>命局概览</h3>
+                  <p>{wuxing.overview}</p>
                 </div>
 
-                <div className="p-4 rounded-xl bg-stone-50 border border-stone-100 space-y-2">
-                  <p className="font-medium">日主分析</p>
-                  <p className="leading-relaxed whitespace-pre-line">{wuxing.dayMasterAnalysis}</p>
+                <div className="deep-report-prose-group">
+                  <h3>日主分析</h3>
+                  <p className="whitespace-pre-line">{wuxing.dayMasterAnalysis}</p>
                 </div>
 
-                <div className="p-4 rounded-xl bg-stone-50 border border-stone-100 space-y-2">
-                  <p className="font-medium">五行详解</p>
-                  <div className="leading-relaxed space-y-1">{renderMultiline(wuxing.detail)}</div>
+                <div className="deep-report-prose-group">
+                  <h3>五行详解</h3>
+                  <div className="deep-report-multiline">{renderMultiline(wuxing.detail)}</div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-xl bg-stone-50 border border-stone-100">
-                    <p className="font-medium">喜用神</p>
+                <div className="deep-report-xiyong-grid">
+                  <div>
+                    <h3>喜用神</h3>
                     <p>{wuxing.xiYongShen?.xi?.join("、") || "—"}</p>
                   </div>
-                  <div className="p-3 rounded-xl bg-stone-50 border border-stone-100">
-                    <p className="font-medium">忌神</p>
+                  <div>
+                    <h3>忌神</h3>
                     <p>{wuxing.xiYongShen?.ji?.join("、") || "—"}</p>
                   </div>
                 </div>
@@ -167,43 +187,46 @@ export default function DeepReportDetailPage() {
           )}
 
           {dayun && (
-            <section className="bg-white rounded-2xl border border-stone-100 p-6 shadow-sm">
-              <h2 className="text-lg font-medium mb-4">大运流年</h2>
-              <p className="text-sm text-stone-500 mb-4">{dayun.summary}</p>
+            <section className="deep-report-section">
+              <div className="deep-report-section-heading">
+                <span>02</span>
+                <div><p>LIFE CYCLES</p><h2>大运流年</h2></div>
+              </div>
+              <p className="deep-report-section-intro">{dayun.summary}</p>
               {dayun.startInfo?.起运年龄 !== undefined && (
-                <p className="text-sm text-stone-500 mb-4">
+                <p className="deep-report-start-info">
                   起运年龄：{dayun.startInfo.起运年龄} 岁
                   {dayun.startInfo.起运详情 ? ` · ${dayun.startInfo.起运详情}` : ""}
                 </p>
               )}
 
               {dayunList.length > 0 && (
-                <div className="space-y-3">
+                <div className="deep-report-dayun-list">
                   {dayunList.map((item, index) => (
                     <div
                       key={index}
-                      className="p-4 rounded-xl bg-stone-50 border border-stone-100"
+                      className="deep-report-dayun-item"
                     >
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="font-medium text-base">
+                      <div className="deep-report-dayun-heading">
+                        <h3>
                           第{item.index || index + 1}步大运 · {item.干支 || "—"}
                           {item.十神 && (
-                            <span className="text-sm text-stone-500 ml-2">{item.十神}</span>
+                            <span>{item.十神}</span>
                           )}
-                        </div>
-                        <div className="text-xs text-stone-400">
+                        </h3>
+                        <p>
                           {item.rating && <span className="mr-2">{item.rating}等运</span>}
                           {item.起运年份 !== undefined && `${item.起运年份} 年起`}
                           {item.起运年龄 !== undefined && ` · ${item.起运年龄} 岁`}
-                        </div>
+                        </p>
                       </div>
                       {item.relation && (
-                        <p className="text-sm text-stone-600 leading-relaxed mb-2">
+                        <p className="deep-report-dayun-relation">
                           {item.relation}
                         </p>
                       )}
                       {item.comprehensive && (
-                        <p className="text-sm text-stone-500 leading-relaxed">
+                        <p className="deep-report-dayun-copy">
                           {item.comprehensive}
                         </p>
                       )}

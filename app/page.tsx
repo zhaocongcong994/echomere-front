@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import RippleDistortion from './RippleDistortion';
 import { BrandLockup } from '@/components/echomere-chrome';
 import { useAuth } from '@/components/auth-provider';
@@ -8,10 +8,16 @@ import { useAuth } from '@/components/auth-provider';
 export default function Home() {
   const [orbActive, setOrbActive] = useState(false);
   const [visualReady, setVisualReady] = useState(false);
+  const [orbReady, setOrbReady] = useState(false);
   const { user } = useAuth();
 
+  useEffect(() => {
+    const fallback = window.setTimeout(() => setOrbReady(true), 700);
+    return () => window.clearTimeout(fallback);
+  }, []);
+
   return (
-    <main className={`hero-shell${visualReady ? ' is-visual-ready' : ''}`}>
+    <main className={`hero-shell${visualReady ? ' is-visual-ready' : ''}${orbReady ? ' is-orb-ready' : ''}`}>
       <RippleDistortion
         src="/hero-updated.png"
         brushSize={97.5}
@@ -20,7 +26,10 @@ export default function Home() {
         rings={2.5}
         grayscale
         spread={5.75}
-        onReady={() => setVisualReady(true)}
+        onReady={() => {
+          setVisualReady(true);
+          setOrbReady(true);
+        }}
       />
 
       <div className="hero-vignette" aria-hidden="true" />
